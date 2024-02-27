@@ -1,3 +1,5 @@
+[![Test](https://github.com/caravan-bitcoin/descriptors/actions/workflows/ci.yml/badge.svg)](https://github.com/caravan-bitcoin/descriptors/actions/workflows/ci.yml)
+
 # Caravan Descriptors
 
 ## Installation
@@ -49,6 +51,12 @@ of the library don't have to worry about loading up the modules themselves)
 Make sure any PRs pass linting and tests. Changes that impact the API
 will require a [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md)
 in order to be merged.
+
+The following command will launch the changeset cli:
+
+```shell
+$ npm run changeset
+```
 
 ## API
 NOTE: This is subject to change as this is still very much alpha

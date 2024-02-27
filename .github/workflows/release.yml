@@ -34,10 +34,12 @@ jobs:
           node-version: 20
 
       - name: Cache Dependencies ...
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          path: |
+            ~/.npm
+            caravan-rs
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('caravan-rs') }}
           restore-keys: ${{ runner.os }}-node-
 
       - name: Creating .npmrc
@@ -47,6 +49,12 @@ jobs:
           EOF
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Install wasm-pack
+        uses: jetli/wasm-pack-action@v0.4.0
+        with:
+          # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
+          version: 'latest'
 
       - name: Install Dependencies
         run: npm install
