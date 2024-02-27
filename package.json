@@ -8,6 +8,10 @@
   "engines": {
     "node": ">=20"
   },
+  "files": [
+    "./dist/src/index.js",
+    "./dist/src/index.d.ts"
+  ],
   "private": false,
   "publishConfig": {
     "access": "public",
