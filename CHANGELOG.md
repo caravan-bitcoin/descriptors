@@ -1,5 +1,11 @@
 # @caravan/descriptors
 
+## 0.0.4
+
+### Patch Changes
+
+- db86447: add npmignore to fix missing package
+
 ## 0.0.3
 
 ### Patch Changes
