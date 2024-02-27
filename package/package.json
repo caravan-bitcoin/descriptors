@@ -1,6 +1,6 @@
 {
   "name": "@caravan/descriptors",
-  "version": "0.0.3",
+  "version": "0.0.2",
   "author": "Unchained Capital",
   "description": "A library for parsing and encoding descriptor strings using bdk",
   "main": "./dist/src/index.js",
@@ -25,7 +25,7 @@
     "clean": "rm -rf dist/",
     "copy-wasm": "shx mkdir -p dist/caravan-rs/pkg-web && shx mkdir -p dist/caravan-rs/pkg-nodejs && shx cp -R caravan-rs/pkg-web/* dist/caravan-rs/pkg-web/ && shx cp -R caravan-rs/pkg-nodejs/* dist/caravan-rs/pkg-nodejs/",
     "dev": "npm run build -- --watch",
-    "lint": "tsc && eslint 'src/**/*.{ts,js,json}'",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
     "ci": "npm run lint && npm run test",
     "test": "jest src",
     "test:watch": "jest --watch src",
