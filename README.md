@@ -1,4 +1,6 @@
-[![Test](https://github.com/caravan-bitcoin/descriptors/actions/workflows/ci.yml/badge.svg)](https://github.com/caravan-bitcoin/descriptors/actions/workflows/ci.yml)
+[![tests](https://github.com/caravan-bitcoin/descriptors/actions/workflows/ci.yml/badge.svg)](https://github.com/caravan-bitcoin/descriptors/actions/workflows/ci.yml)
+[![Release](https://github.com/caravan-bitcoin/descriptors/actions/workflows/release.yml/badge.svg)](https://github.com/caravan-bitcoin/descriptors/actions/workflows/release.yml)
+[![npm](https://img.shields.io/npm/v/@caravan/descriptors)](https://www.npmjs.com/package/@caravan/descriptors)
 
 # Caravan Descriptors
 
