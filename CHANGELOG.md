@@ -1,5 +1,11 @@
 # @caravan/descriptors
 
+## 0.0.2
+
+### Patch Changes
+
+- 9b617c3: Update usage of types from caravan dependencies
+
 ## 0.0.1
 
 ### Patch Changes
