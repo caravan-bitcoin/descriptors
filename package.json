@@ -9,7 +9,7 @@
     "node": ">=20"
   },
   "files": [
-    "./dist/**"
+    "dist"
   ],
   "private": false,
   "publishConfig": {
@@ -30,7 +30,7 @@
     "test:watch": "jest --watch src",
     "test:debug": "node --inspect-brk ../../node_modules/.bin/jest --runInBand",
     "version": "changeset version",
-    "release": "changeset publish"
+    "release": "npm run build && changeset publish"
   },
   "dependencies": {
     "@caravan/bitcoin": "^0.0.3",
