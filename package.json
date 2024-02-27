@@ -1,0 +1,53 @@
+{
+  "name": "@caravan/descriptors",
+  "version": "0.0.1",
+  "author": "Unchained Capital",
+  "description": "A library for parsing and encoding descriptor strings using bdk",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "engines": {
+    "node": ">=20"
+  },
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "scripts": {
+    "build:rs": "cd caravan-rs && wasm-pack build -t web --out-dir pkg-web && wasm-pack build --target nodejs --out-dir pkg-nodejs",
+    "build:ts": "tsc",
+    "build": "npm run build:rs && npm run build:ts && npm run copy-wasm",
+    "clean": "rm -rf dist/",
+    "copy-wasm": "shx mkdir -p dist/caravan-rs/pkg-web && shx mkdir -p dist/caravan-rs/pkg-nodejs && shx cp -R caravan-rs/pkg-web/* dist/caravan-rs/pkg-web/ && shx cp -R caravan-rs/pkg-nodejs/* dist/caravan-rs/pkg-nodejs/",
+    "dev": "npm run build -- --watch",
+    "lint": "eslint src",
+    "ci": "npm run build && npm run lint && npm run test",
+    "test": "npm run build && jest src",
+    "test:watch": "jest --watch src",
+    "test:debug": "node --inspect-brk ../../node_modules/.bin/jest --runInBand",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "dependencies": {
+    "@caravan/bitcoin": "^0.0.3",
+    "@caravan/wallets": "^0.1.0"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.1",
+    "@types/jest": "^29.5.12",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
+    "@typescript-eslint/parser": "^7.1.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-only-warn": "^1.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "shx": "^0.3.4",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  }
+}
