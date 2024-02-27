@@ -1,5 +1,11 @@
 # @caravan/descriptors
 
+## 0.0.3
+
+### Patch Changes
+
+- afd4dd5: fix publication files
+
 ## 0.0.2
 
 ### Patch Changes
