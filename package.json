@@ -9,8 +9,7 @@
     "node": ">=20"
   },
   "files": [
-    "./dist/src/index.js",
-    "./dist/src/index.d.ts"
+    "./dist/**"
   ],
   "private": false,
   "publishConfig": {
