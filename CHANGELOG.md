@@ -1,5 +1,11 @@
 # @caravan/descriptors
 
+## 0.0.6
+
+### Patch Changes
+
+- 521d899: ensure publication of right files
+
 ## 0.0.5
 
 ### Patch Changes
