@@ -1,5 +1,11 @@
 # @caravan/descriptors
 
+## 0.0.5
+
+### Patch Changes
+
+- e38d6f5: include more files for publish
+
 ## 0.0.4
 
 ### Patch Changes
