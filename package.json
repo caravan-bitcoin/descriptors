@@ -32,8 +32,8 @@
     "version": "changeset version",
     "release": "npm run build && changeset publish"
   },
-  "dependencies": {
-    "@caravan/bitcoin": "^0.0.3",
+  "peerDependencies": {
+    "@caravan/bitcoin": "^0.1.0",
     "@caravan/wallets": "^0.1.0"
   },
   "devDependencies": {
@@ -42,6 +42,8 @@
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
+    "@caravan/bitcoin": "^0.1.0",
+    "@caravan/wallets": "^0.1.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",
