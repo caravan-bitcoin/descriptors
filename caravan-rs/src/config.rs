@@ -274,8 +274,8 @@ impl CaravanConfig {
 
         let network = match network {
             Network::Bitcoin => CaravanNetwork::Mainnet,
+            Network::Regtest => CaravanNetwork::Regtest,
             _ => CaravanNetwork::Testnet,
-            _ => CaravanNetwork::Regtest,
         };
 
         let client = CaravanClient { value: client_type };
