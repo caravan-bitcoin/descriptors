@@ -1,5 +1,12 @@
 # @caravan/descriptors
 
+## 0.1.1
+
+### Patch Changes
+
+- 05fded9: fix dependencies
+- 1b6ebc2: Fix rust matcher with unreachable code
+
 ## 0.1.0
 
 ### Minor Changes
