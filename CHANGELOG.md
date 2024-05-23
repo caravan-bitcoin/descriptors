@@ -1,5 +1,11 @@
 # @caravan/descriptors
 
+## 0.1.0
+
+### Minor Changes
+
+- 6ea86d3: add support for regtest network when encoding descriptors
+
 ## 0.0.6
 
 ### Patch Changes
