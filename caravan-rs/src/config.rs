@@ -155,6 +155,7 @@ impl CaravanConfig {
         match self.network {
             CaravanNetwork::Mainnet => Network::Bitcoin,
             CaravanNetwork::Testnet => Network::Testnet,
+            CaravanNetwork::Regtest => Network::Regtest,
         }
     }
     /// Get the descriptor value
@@ -274,6 +275,7 @@ impl CaravanConfig {
         let network = match network {
             Network::Bitcoin => CaravanNetwork::Mainnet,
             _ => CaravanNetwork::Testnet,
+            _ => CaravanNetwork::Regtest,
         };
 
         let client = CaravanClient { value: client_type };
@@ -404,6 +406,7 @@ impl Display for CaravanAddressType {
 enum CaravanNetwork {
     Mainnet,
     Testnet,
+    Regtest,
 }
 
 impl From<CaravanNetwork> for Network {
@@ -411,6 +414,7 @@ impl From<CaravanNetwork> for Network {
         match n {
             CaravanNetwork::Mainnet => Network::Bitcoin,
             CaravanNetwork::Testnet => Network::Testnet,
+            CaravanNetwork::Regtest => Network::Regtest,
         }
     }
 }
@@ -505,6 +509,7 @@ impl MultisigWalletConfig {
         match self.network {
             CaravanNetwork::Mainnet => Network::Bitcoin,
             CaravanNetwork::Testnet => Network::Testnet,
+            CaravanNetwork::Regtest => Network::Regtest,
         }
     }
 

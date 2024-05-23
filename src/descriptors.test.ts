@@ -26,6 +26,29 @@ const expectedKeys = [
   },
 ];
 
+const testInternal =
+  "sh(sortedmulti(2,[611d202e/45'/1'/11'/3]tpubDEcXYgwH59QbtaS1q7CNskaL23oXnePHiU5zQuVDTDbSfM2xx5WYKaqgpfKnjAzgrHymmA7rZYmgtLKpugFq4dWJEC6HPpeUrMjFprLx8fW/1/*,[3e191e15/0/0/0/0]tpubDEeGXbhQg9q8ch8RvufnqvK4FPTRxidayvdb4Z24eyGUBSHsEBhQ8jaGZ4acKUzfP3FgVChNEPB47KzMHJbaL2WzvQqijrFTbSUqoHvXuoE/1/*,[96cf6667/45'/1'/12'/2]tpubDEX9s9A6av9oHR89T9VArgrt4zg3zBGndMm6Q2LEaBiEF153K2yF2yewHWmfNicEUdBXzmaP7VBZvT5D3GG1m5cYy36qfsA9RQS1uYw3MGi/1/*))#j8hgkfxv";
+const testExternal =
+  "sh(sortedmulti(2,[611d202e/45'/1'/11'/3]tpubDEcXYgwH59QbtaS1q7CNskaL23oXnePHiU5zQuVDTDbSfM2xx5WYKaqgpfKnjAzgrHymmA7rZYmgtLKpugFq4dWJEC6HPpeUrMjFprLx8fW/0/*,[3e191e15/0/0/0/0]tpubDEeGXbhQg9q8ch8RvufnqvK4FPTRxidayvdb4Z24eyGUBSHsEBhQ8jaGZ4acKUzfP3FgVChNEPB47KzMHJbaL2WzvQqijrFTbSUqoHvXuoE/0/*,[96cf6667/45'/1'/12'/2]tpubDEX9s9A6av9oHR89T9VArgrt4zg3zBGndMm6Q2LEaBiEF153K2yF2yewHWmfNicEUdBXzmaP7VBZvT5D3GG1m5cYy36qfsA9RQS1uYw3MGi/0/*))#medls6ae";
+
+const testKeys = [
+  {
+    xfp: "611d202e",
+    bip32Path: "m/45'/1'/11'/3",
+    xpub: "tpubDEcXYgwH59QbtaS1q7CNskaL23oXnePHiU5zQuVDTDbSfM2xx5WYKaqgpfKnjAzgrHymmA7rZYmgtLKpugFq4dWJEC6HPpeUrMjFprLx8fW",
+  },
+  {
+    xfp: "3e191e15",
+    bip32Path: "m/0/0/0/0",
+    xpub: "tpubDEeGXbhQg9q8ch8RvufnqvK4FPTRxidayvdb4Z24eyGUBSHsEBhQ8jaGZ4acKUzfP3FgVChNEPB47KzMHJbaL2WzvQqijrFTbSUqoHvXuoE",
+  },
+  {
+    xfp: "96cf6667",
+    bip32Path: "m/45'/1'/12'/2",
+    xpub: "tpubDEX9s9A6av9oHR89T9VArgrt4zg3zBGndMm6Q2LEaBiEF153K2yF2yewHWmfNicEUdBXzmaP7VBZvT5D3GG1m5cYy36qfsA9RQS1uYw3MGi",
+  },
+];
+
 const testConfig = (config: MultisigWalletConfig) => {
   expect(config.addressType).toEqual("P2SH");
   expect(config.requiredSigners).toEqual(2);
@@ -42,11 +65,6 @@ describe("decodeDescriptors", () => {
   });
 
   it("should throw if called with inconsistent network", async () => {
-    const testInternal =
-      "sh(sortedmulti(2,[611d202e/45'/1'/11'/3]tpubDEcXYgwH59QbtaS1q7CNskaL23oXnePHiU5zQuVDTDbSfM2xx5WYKaqgpfKnjAzgrHymmA7rZYmgtLKpugFq4dWJEC6HPpeUrMjFprLx8fW/1/*,[3e191e15/0/0/0/0]tpubDEeGXbhQg9q8ch8RvufnqvK4FPTRxidayvdb4Z24eyGUBSHsEBhQ8jaGZ4acKUzfP3FgVChNEPB47KzMHJbaL2WzvQqijrFTbSUqoHvXuoE/1/*,[96cf6667/45'/1'/12'/2]tpubDEX9s9A6av9oHR89T9VArgrt4zg3zBGndMm6Q2LEaBiEF153K2yF2yewHWmfNicEUdBXzmaP7VBZvT5D3GG1m5cYy36qfsA9RQS1uYw3MGi/1/*))#j8hgkfxv";
-    const testExternal =
-      "sh(sortedmulti(2,[611d202e/45'/1'/11'/3]tpubDEcXYgwH59QbtaS1q7CNskaL23oXnePHiU5zQuVDTDbSfM2xx5WYKaqgpfKnjAzgrHymmA7rZYmgtLKpugFq4dWJEC6HPpeUrMjFprLx8fW/0/*,[3e191e15/0/0/0/0]tpubDEeGXbhQg9q8ch8RvufnqvK4FPTRxidayvdb4Z24eyGUBSHsEBhQ8jaGZ4acKUzfP3FgVChNEPB47KzMHJbaL2WzvQqijrFTbSUqoHvXuoE/0/*,[96cf6667/45'/1'/12'/2]tpubDEX9s9A6av9oHR89T9VArgrt4zg3zBGndMm6Q2LEaBiEF153K2yF2yewHWmfNicEUdBXzmaP7VBZvT5D3GG1m5cYy36qfsA9RQS1uYw3MGi/0/*))#medls6ae";
-
     // Jest's "expect...toThrowError" doesn't work for some reason here
     let passed = false;
     try {
@@ -74,16 +92,31 @@ describe("decodeDescriptors", () => {
 });
 
 describe("encodeDescriptors", () => {
-  it("should convert a config to descriptors", async () => {
-    const config = {
+  let config;
+
+  beforeEach(() => {
+    config = {
       addressType: "P2SH",
       keyOrigins: expectedKeys,
       requiredSigners: 2,
       network: "mainnet",
     } as MultisigWalletConfig;
+  });
+
+  it("should convert a config to descriptors", async () => {
     const actual = await encodeDescriptors(config);
     expect(actual.receive).toEqual(external);
     expect(actual.change).toEqual(internal);
+  });
+
+  it("should support test networks", async () => {
+    for (const network of [Network.TESTNET, Network.REGTEST]) {
+      config.network = network;
+      config.keyOrigins = testKeys;
+      const actual = await encodeDescriptors(config);
+      expect(actual.receive).toEqual(testExternal);
+      expect(actual.change).toEqual(testInternal);
+    }
   });
 });
 
