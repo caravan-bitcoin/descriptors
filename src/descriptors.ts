@@ -11,6 +11,8 @@ import {
   CHECKSUM_REGEX,
 } from "./multipath";
 
+const FINGERPRINT_REGEX = /\[([a-f0-9]+)\//i;
+
 // should be a 32 byte hex string
 export type PolicyHmac = string;
 // should be an 8 byte hex string
@@ -226,8 +228,23 @@ export const getWalletFromDescriptor = async (
   return await decodeDescriptors(internal, external, network);
 };
 
+/**
+ * Extracts the key fingerprint from a BIP380 descriptor string.
+ * The fingerprint is part of the key origin information, enclosed in square brackets
+ * followed by a derivation path and a slash, as defined in BIP380.
+ *
+ * @param descriptor - The BIP380 descriptor string to parse.
+ * @returns The extracted fingerprint as a lowercase hex string, or null if not found.
+ */
+export const getFingerprintFromBip380Descriptor = (
+  descriptor: string,
+): string | null => {
+  return descriptor.match(FINGERPRINT_REGEX)?.[1]?.toLowerCase() || null;
+};
+
 export default {
   encodeDescriptors,
   encodeDescriptorWithMultipath,
   decodeDescriptors,
+  getFingerprintFromBip380Descriptor,
 };
