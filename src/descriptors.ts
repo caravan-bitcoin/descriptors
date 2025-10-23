@@ -86,6 +86,56 @@ export const encodeDescriptors = async (
 
 const checksumRegex = /#[0-9a-zA-Z]{8}/g;
 
+/**
+ * Expands a descriptor with range notation (e.g., <0;1>) into separate external and internal descriptors.
+ * If the descriptor doesn't contain range notation, falls back to traditional 0/* or 1/* detection.
+ *
+ * @param descriptor - The descriptor string, potentially containing <0;1> range notation
+ * @returns Object with external and internal descriptor strings (without checksums)
+ */
+const expandRangeNotation = (
+  descriptor: string,
+): { external: string; internal: string } => {
+  let internal = "";
+  let external = "";
+
+  // Check for range notation like <0;1>/* or < 0 ; 1 >/*
+  // The range is followed by /* so we need to match the whole pattern
+  const rangeRegex = /<\s*([0-9]+)\s*;\s*([0-9]+)\s*>\s*\/\*/g;
+  const rangeMatch = descriptor.match(rangeRegex);
+
+  if (rangeMatch) {
+    // Range notation detected (e.g., <0;1>/*)
+    // Remove checksum before expansion
+    const descriptorWithoutChecksum = descriptor.replace(checksumRegex, "");
+
+    // Extract the range values - we need to match again to get capture groups
+    const match = /<\s*([0-9]+)\s*;\s*([0-9]+)\s*>\s*\/\*/.exec(
+      descriptorWithoutChecksum,
+    );
+    if (match) {
+      // match[0] is the full match, match[1] and match[2] are the capture groups
+      const [, a, b] = match;
+
+      // Replace <0;1>/* with 0/* for external
+      external = descriptorWithoutChecksum.replace(rangeRegex, `${a}/*`);
+
+      // Replace <0;1>/* with 1/* for internal
+      internal = descriptorWithoutChecksum.replace(rangeRegex, `${b}/*`);
+    }
+  } else if (descriptor.includes("0/*")) {
+    // Traditional notation with 0/*
+    external = descriptor;
+    internal = descriptor.replace(/0\/\*/g, "1/*").replace(checksumRegex, "");
+  } else if (descriptor.includes("1/*")) {
+    // Traditional notation with 1/*
+    internal = descriptor;
+    external = descriptor.replace(/1\/\*/g, "0/*").replace(checksumRegex, "");
+  }
+
+  return { external, internal };
+};
+
 export const getChecksum = async (descriptor: string) => {
   // let's just check that the descriptor is valid
   try {
@@ -109,15 +159,7 @@ export const getWalletFromDescriptor = async (
   descriptor: string,
   network?: Network,
 ): Promise<MultisigWalletConfig> => {
-  let internal: string = "",
-    external: string = "";
-  if (descriptor.includes("0/*")) {
-    external = descriptor;
-    internal = descriptor.replace(/0\/\*/g, "1/*").replace(checksumRegex, "");
-  } else if (descriptor.includes("1/*")) {
-    internal = descriptor;
-    external = descriptor.replace(/1\/\*/g, "0/*").replace(checksumRegex, "");
-  }
+  const { external, internal } = expandRangeNotation(descriptor);
   return await decodeDescriptors(internal, external, network);
 };
 
