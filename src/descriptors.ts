@@ -5,7 +5,7 @@ import {
   validateExtendedPublicKeyForNetwork,
 } from "@caravan/bitcoin";
 import { KeyOrigin } from "@caravan/wallets";
-import { applyRangeNotation, expandRangeNotation } from "./utils/rangeNotation";
+import { applyRangeNotation, parseDescriptorPaths } from "./utils/rangeNotation";
 
 // should be a 32 byte hex string
 export type PolicyHmac = string;
@@ -114,7 +114,7 @@ export const getWalletFromDescriptor = async (
   descriptor: string,
   network?: Network,
 ): Promise<MultisigWalletConfig> => {
-  const { external, internal } = expandRangeNotation(descriptor);
+  const { external, internal } = parseDescriptorPaths(descriptor);
   return await decodeDescriptors(internal, external, network);
 };
 
