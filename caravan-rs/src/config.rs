@@ -479,6 +479,12 @@ pub struct MultisigWalletConfig {
     pub key_origins: Vec<KeyOrigin>,
     /// Caravan network
     network: CaravanNetwork,
+    /// Flag to indicate range notation preference (e.g., <0;1>/*).
+    /// The actual range notation transformation is handled in TypeScript layer
+    /// because BDK's parser doesn't support non-standard <0;1> syntax.
+    /// This field is used for serialization/deserialization compatibility.
+    #[serde(default, rename = "useRangeNotation")]
+    pub use_range_notation: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

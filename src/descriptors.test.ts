@@ -241,8 +241,7 @@ describe("Range Notation Support (<0;1>)", () => {
         network: Network.TESTNET,
         requiredSigners: 2,
         keyOrigins: expectedRangeKeys,
-        // TODO: Add flag to indicate range notation should be used
-        // useRangeNotation: true, // This will need to be added
+        useRangeNotation: true,
       };
 
       const result = await encodeDescriptors(configWithRange);
@@ -256,6 +255,48 @@ describe("Range Notation Support (<0;1>)", () => {
       const receiveWithoutChecksum = result.receive.split("#")[0];
       const changeWithoutChecksum = result.change.split("#")[0];
       expect(receiveWithoutChecksum).toEqual(changeWithoutChecksum);
+      
+      // Verify checksum is present
+      expect(result.receive).toMatch(/#[0-9a-z]{8}$/);
+      expect(result.change).toMatch(/#[0-9a-z]{8}$/);
+      
+      // Verify the descriptor contains both keys with range notation
+      // Note: BDK may use either ' or h for hardened derivation
+      expect(receiveWithoutChecksum).toContain("/<0;1>/*");
+      expect(receiveWithoutChecksum).toContain("[d52d08fc/48");
+      expect(receiveWithoutChecksum).toContain("[85b4d568/48");
+      
+      // Verify both keys have range notation
+      const rangeNotationCount = (receiveWithoutChecksum.match(/\/<0;1>\/\*/g) || []).length;
+      expect(rangeNotationCount).toBe(2); // Should have range notation for both keys
+    });
+    
+    it("should generate valid checksum for range notation descriptor", async () => {
+      const configWithRange: MultisigWalletConfig = {
+        addressType: "P2WSH",
+        network: Network.TESTNET,
+        requiredSigners: 2,
+        keyOrigins: expectedRangeKeys,
+        useRangeNotation: true,
+      };
+
+      const result = await encodeDescriptors(configWithRange);
+      
+      // Extract the checksum from the result
+      const parts = result.receive.split("#");
+      expect(parts).toHaveLength(2);
+      const generatedChecksum = parts[1];
+      
+      // The checksum should be 8 characters long
+      expect(generatedChecksum).toHaveLength(8);
+      
+      // The checksum should only contain valid bech32 characters
+      expect(generatedChecksum).toMatch(/^[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
+      
+      // Verify we can decode the descriptor (validates checksum is correct)
+      await expect(
+        getWalletFromDescriptor(result.receive, Network.TESTNET)
+      ).resolves.toBeDefined();
     });
   });
 
