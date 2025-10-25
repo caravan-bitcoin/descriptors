@@ -64,22 +64,17 @@ export const parseDescriptorPaths = (
  * 
  * @param externalDesc - External descriptor (with /0/* paths)
  * @param internalDesc - Internal descriptor (with /1/* paths, currently unused) 
- * @returns Object with both receive and change set to the same range notation descriptor
+ * @returns Single descriptor string with range notation that covers both external and internal paths
  */
 export const applyRangeNotation = (
   externalDesc: string,
   internalDesc: string,
-): { receive: string; change: string } => {
+): string => {
   // Replace all /0/* with /<0;1>/* in the external descriptor
   const externalWithoutChecksum = externalDesc.split("#")[0];
   const rangeDescriptor = externalWithoutChecksum.replace(/\/0\/\*/g, "/<0;1>/*");
   
   // Calculate checksum for the range notation descriptor
   const checksum = calculateDescriptorChecksum(rangeDescriptor);
-  const rangeDescriptorWithChecksum = `${rangeDescriptor}#${checksum}`;
-  
-  return {
-    receive: rangeDescriptorWithChecksum,
-    change: rangeDescriptorWithChecksum,
-  };
+  return `${rangeDescriptor}#${checksum}`;
 };

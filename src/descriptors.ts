@@ -74,7 +74,6 @@ export const decodeDescriptors = async (
 
 export const encodeDescriptors = async (
   config: MultisigWalletConfig,
-  useRangeNotation = false,
 ): Promise<{ receive: string; change: string }> => {
   const bdk = await getRustAPI();
   const { MultisigWalletConfig: RsWalletConfig } = bdk;
@@ -83,10 +82,22 @@ export const encodeDescriptors = async (
   const externalDesc = wallet.external_descriptor().to_string();
   const internalDesc = wallet.internal_descriptor().to_string();
 
-  // Apply range notation if requested, otherwise return traditional format
-  return useRangeNotation
-    ? applyRangeNotation(externalDesc, internalDesc)
-    : { receive: externalDesc, change: internalDesc };
+  return { receive: externalDesc, change: internalDesc };
+};
+
+export const encodeDescriptorWithRangeNotation = async (
+  config: MultisigWalletConfig,
+): Promise<string> => {
+  const bdk = await getRustAPI();
+  const { MultisigWalletConfig: RsWalletConfig } = bdk;
+  const wallet = RsWalletConfig.from_str(JSON.stringify(config));
+
+  const externalDesc = wallet.external_descriptor().to_string();
+  const internalDesc = wallet.internal_descriptor().to_string();
+
+  // Convert to range notation and return single descriptor
+  const rangeDescriptor = applyRangeNotation(externalDesc, internalDesc);
+  return rangeDescriptor;
 };
 
 const checksumRegex = /#[0-9a-zA-Z]{8}/g;
@@ -118,4 +129,8 @@ export const getWalletFromDescriptor = async (
   return await decodeDescriptors(internal, external, network);
 };
 
-export default { encodeDescriptors, decodeDescriptors };
+export default { 
+  encodeDescriptors, 
+  encodeDescriptorWithRangeNotation,
+  decodeDescriptors 
+};

@@ -3,6 +3,7 @@ import {
   MultisigWalletConfig,
   decodeDescriptors,
   encodeDescriptors,
+  encodeDescriptorWithRangeNotation,
   getChecksum,
   getWalletFromDescriptor,
 } from "./descriptors";
@@ -234,8 +235,8 @@ describe("Range Notation Support (<0;1>)", () => {
     });
   });
 
-  describe("encodeDescriptors with range notation", () => {
-    it("should encode config with range notation flag", async () => {
+  describe("encodeDescriptorWithRangeNotation", () => {
+    it("should encode config to a single range notation descriptor", async () => {
       const config: MultisigWalletConfig = {
         addressType: "P2WSH",
         network: Network.TESTNET,
@@ -243,30 +244,28 @@ describe("Range Notation Support (<0;1>)", () => {
         keyOrigins: expectedRangeKeys,
       };
 
-      const result = await encodeDescriptors(config, true);
+      const result = await encodeDescriptorWithRangeNotation(config);
 
-      // The result should contain descriptors with <0;1> notation
-      expect(result.receive).toContain("<0;1>");
-      expect(result.change).toContain("<0;1>");
-
-      // Both should be the same descriptor (combined internal/external)
-      // Remove checksums for comparison
-      const receiveWithoutChecksum = result.receive.split("#")[0];
-      const changeWithoutChecksum = result.change.split("#")[0];
-      expect(receiveWithoutChecksum).toEqual(changeWithoutChecksum);
+      // Should be a single string, not an object
+      expect(typeof result).toBe("string");
+      
+      // The result should contain <0;1> notation
+      expect(result).toContain("<0;1>");
       
       // Verify checksum is present
-      expect(result.receive).toMatch(/#[0-9a-z]{8}$/);
-      expect(result.change).toMatch(/#[0-9a-z]{8}$/);
+      expect(result).toMatch(/#[0-9a-z]{8}$/);
+      
+      // Extract descriptor without checksum
+      const descriptorWithoutChecksum = result.split("#")[0];
       
       // Verify the descriptor contains both keys with range notation
       // Note: BDK may use either ' or h for hardened derivation
-      expect(receiveWithoutChecksum).toContain("/<0;1>/*");
-      expect(receiveWithoutChecksum).toContain("[d52d08fc/48");
-      expect(receiveWithoutChecksum).toContain("[85b4d568/48");
+      expect(descriptorWithoutChecksum).toContain("/<0;1>/*");
+      expect(descriptorWithoutChecksum).toContain("[d52d08fc/48");
+      expect(descriptorWithoutChecksum).toContain("[85b4d568/48");
       
       // Verify both keys have range notation
-      const rangeNotationCount = (receiveWithoutChecksum.match(/\/<0;1>\/\*/g) || []).length;
+      const rangeNotationCount = (descriptorWithoutChecksum.match(/\/<0;1>\/\*/g) || []).length;
       expect(rangeNotationCount).toBe(2); // Should have range notation for both keys
     });
     
@@ -278,10 +277,10 @@ describe("Range Notation Support (<0;1>)", () => {
         keyOrigins: expectedRangeKeys,
       };
 
-      const result = await encodeDescriptors(config, true);
+      const result = await encodeDescriptorWithRangeNotation(config);
       
       // Extract the checksum from the result
-      const parts = result.receive.split("#");
+      const parts = result.split("#");
       expect(parts).toHaveLength(2);
       const generatedChecksum = parts[1];
       
@@ -293,7 +292,7 @@ describe("Range Notation Support (<0;1>)", () => {
       
       // Verify we can decode the descriptor (validates checksum is correct)
       await expect(
-        getWalletFromDescriptor(result.receive, Network.TESTNET)
+        getWalletFromDescriptor(result, Network.TESTNET)
       ).resolves.toBeDefined();
     });
   });
