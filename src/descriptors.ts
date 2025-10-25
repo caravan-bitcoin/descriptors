@@ -21,7 +21,6 @@ export interface MultisigWalletConfig {
   addressType: MultisigAddressType;
   keyOrigins: KeyOrigin[];
   network: Network | "bitcoin";
-  useRangeNotation?: boolean;
 }
 
 export const decodeDescriptors = async (
@@ -75,6 +74,7 @@ export const decodeDescriptors = async (
 
 export const encodeDescriptors = async (
   config: MultisigWalletConfig,
+  useRangeNotation = false,
 ): Promise<{ receive: string; change: string }> => {
   const bdk = await getRustAPI();
   const { MultisigWalletConfig: RsWalletConfig } = bdk;
@@ -84,7 +84,7 @@ export const encodeDescriptors = async (
   const internalDesc = wallet.internal_descriptor().to_string();
 
   // Apply range notation if requested, otherwise return traditional format
-  return config.useRangeNotation
+  return useRangeNotation
     ? applyRangeNotation(externalDesc, internalDesc)
     : { receive: externalDesc, change: internalDesc };
 };

@@ -236,15 +236,14 @@ describe("Range Notation Support (<0;1>)", () => {
 
   describe("encodeDescriptors with range notation", () => {
     it("should encode config with range notation flag", async () => {
-      const configWithRange: MultisigWalletConfig = {
+      const config: MultisigWalletConfig = {
         addressType: "P2WSH",
         network: Network.TESTNET,
         requiredSigners: 2,
         keyOrigins: expectedRangeKeys,
-        useRangeNotation: true,
       };
 
-      const result = await encodeDescriptors(configWithRange);
+      const result = await encodeDescriptors(config, true);
 
       // The result should contain descriptors with <0;1> notation
       expect(result.receive).toContain("<0;1>");
@@ -272,15 +271,14 @@ describe("Range Notation Support (<0;1>)", () => {
     });
     
     it("should generate valid checksum for range notation descriptor", async () => {
-      const configWithRange: MultisigWalletConfig = {
+      const config: MultisigWalletConfig = {
         addressType: "P2WSH",
         network: Network.TESTNET,
         requiredSigners: 2,
         keyOrigins: expectedRangeKeys,
-        useRangeNotation: true,
       };
 
-      const result = await encodeDescriptors(configWithRange);
+      const result = await encodeDescriptors(config, true);
       
       // Extract the checksum from the result
       const parts = result.receive.split("#");
