@@ -31,16 +31,19 @@ export const parseDescriptorPaths = (
     const match = /<\s*([0-9]+)\s*;\s*([0-9]+)\s*>\s*\/\*/.exec(
       descriptorWithoutChecksum,
     );
-    if (match) {
-      // match[0] is the full match, match[1] and match[2] are the capture groups
-      const [, a, b] = match;
-
-      // Replace <0;1>/* with 0/* for external
-      external = descriptorWithoutChecksum.replace(rangeRegex, `${a}/*`);
-
-      // Replace <0;1>/* with 1/* for internal
-      internal = descriptorWithoutChecksum.replace(rangeRegex, `${b}/*`);
+    
+    if (!match) {
+      throw new Error("Invalid range notation format in descriptor");
     }
+
+    // match[0] is the full match, match[1] and match[2] are the capture groups
+    const [, a, b] = match;
+
+    // Replace <0;1>/* with 0/* for external
+    external = descriptorWithoutChecksum.replace(rangeRegex, `${a}/*`);
+
+    // Replace <0;1>/* with 1/* for internal
+    internal = descriptorWithoutChecksum.replace(rangeRegex, `${b}/*`);
   } else if (descriptor.includes("0/*")) {
     // Traditional notation with 0/*
     external = descriptor;
@@ -49,6 +52,10 @@ export const parseDescriptorPaths = (
     // Traditional notation with 1/*
     internal = descriptor;
     external = descriptor.replace(/1\/\*/g, "0/*").replace(checksumRegex, "");
+  } else {
+    throw new Error(
+      "Descriptor must contain either range notation (<0;1>/*) or path notation (0/* or 1/*)"
+    );
   }
 
   return { external, internal };
