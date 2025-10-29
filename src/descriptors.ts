@@ -102,6 +102,32 @@ export const encodeDescriptorWithRangeNotation = async (
 
 const checksumRegex = /#[0-9a-zA-Z]{8}/g;
 
+/**
+ * Decode a range-notation descriptor into a MultisigWalletConfig.
+ * 
+ * This function accepts a single descriptor string that uses range notation
+ * (e.g., <0;1>/*) and extracts the wallet configuration from it.
+ * 
+ * @param descriptor - A descriptor string with range notation
+ * @param network - Optional network specification (mainnet, testnet, etc.)
+ * @returns MultisigWalletConfig extracted from the descriptor
+ * 
+ * @example
+ * ```typescript
+ * const config = await decodeRangeNotationDescriptor(
+ *   "wsh(sortedmulti(2,.../<0;1>/*))#checksum",
+ *   Network.TESTNET
+ * );
+ * ```
+ */
+export const decodeRangeNotationDescriptor = async (
+  descriptor: string,
+  network?: Network,
+): Promise<MultisigWalletConfig> => {
+  const { external, internal } = parseDescriptorPaths(descriptor);
+  return await decodeDescriptors(internal, external, network);
+};
+
 export const getChecksum = async (descriptor: string) => {
   // let's just check that the descriptor is valid
   try {
@@ -132,5 +158,6 @@ export const getWalletFromDescriptor = async (
 export default { 
   encodeDescriptors, 
   encodeDescriptorWithRangeNotation,
-  decodeDescriptors 
+  decodeDescriptors,
+  decodeRangeNotationDescriptor,
 };
