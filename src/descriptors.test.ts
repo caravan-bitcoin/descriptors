@@ -194,45 +194,42 @@ describe("Range Notation Support (<0;1>)", () => {
     },
   ];
 
-  // Expected individual descriptors after expansion
-  const expectedExpandedExternal =
-    "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/0/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/0/*))";
-  const expectedExpandedInternal =
-    "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/1/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/1/*))";
-
   describe("getWalletFromDescriptor with range notation", () => {
-    it("should decode descriptor with <0;1> range notation", async () => {
-      const config = await getWalletFromDescriptor(
-        rangeDescriptor,
-        Network.TESTNET,
-      );
+    // Test vectors for range notation descriptors
+    // Format: [description, descriptor]
+    const rangeNotationVariants: [string, string][] = [
+      [
+        "standard <0;1> notation",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/<0;1>/*))#pjv8pr5k",
+      ],
+      [
+        "spaces around range values < 0 ; 1 >",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/< 0 ; 1 >/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/< 0 ; 1 >/*))#pjv8pr5k",
+      ],
+    ];
 
-      expect(config.addressType).toEqual("P2WSH");
-      expect(config.requiredSigners).toEqual(2);
-      expect(config.network).toEqual(Network.TESTNET);
-      expect(config.keyOrigins.length).toEqual(2);
+    it.each(rangeNotationVariants)(
+      "should decode descriptor with %s",
+      async (_, descriptor) => {
+        const config = await getWalletFromDescriptor(
+          descriptor,
+          Network.TESTNET,
+        );
 
-      // Verify first key origin
-      expect(config.keyOrigins[0].xfp).toEqual(expectedRangeKeys[0].xfp);
-      expect(config.keyOrigins[0].xpub).toEqual(expectedRangeKeys[0].xpub);
+        expect(config.addressType).toEqual("P2WSH");
+        expect(config.requiredSigners).toEqual(2);
+        expect(config.network).toEqual(Network.TESTNET);
+        expect(config.keyOrigins.length).toEqual(2);
 
-      // Verify second key origin
-      expect(config.keyOrigins[1].xfp).toEqual(expectedRangeKeys[1].xfp);
-      expect(config.keyOrigins[1].xpub).toEqual(expectedRangeKeys[1].xpub);
-    });
+        // Verify first key origin
+        expect(config.keyOrigins[0].xfp).toEqual(expectedRangeKeys[0].xfp);
+        expect(config.keyOrigins[0].xpub).toEqual(expectedRangeKeys[0].xpub);
 
-    it("should handle range notation with different formats", async () => {
-      // Test with spaces in range
-      const rangeWithSpaces =
-        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/< 0 ; 1 >/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/< 0 ; 1 >/*))#pjv8pr5k";
-
-      const config = await getWalletFromDescriptor(
-        rangeWithSpaces,
-        Network.TESTNET,
-      );
-      expect(config.addressType).toEqual("P2WSH");
-      expect(config.requiredSigners).toEqual(2);
-    });
+        // Verify second key origin
+        expect(config.keyOrigins[1].xfp).toEqual(expectedRangeKeys[1].xfp);
+        expect(config.keyOrigins[1].xpub).toEqual(expectedRangeKeys[1].xpub);
+      },
+    );
   });
 
   describe("encodeDescriptorWithRangeNotation", () => {
@@ -248,27 +245,29 @@ describe("Range Notation Support (<0;1>)", () => {
 
       // Should be a single string, not an object
       expect(typeof result).toBe("string");
-      
+
       // The result should contain <0;1> notation
       expect(result).toContain("<0;1>");
-      
+
       // Verify checksum is present
       expect(result).toMatch(/#[0-9a-z]{8}$/);
-      
+
       // Extract descriptor without checksum
       const descriptorWithoutChecksum = result.split("#")[0];
-      
+
       // Verify the descriptor contains both keys with range notation
       // Note: BDK may use either ' or h for hardened derivation
       expect(descriptorWithoutChecksum).toContain("/<0;1>/*");
       expect(descriptorWithoutChecksum).toContain("[d52d08fc/48");
       expect(descriptorWithoutChecksum).toContain("[85b4d568/48");
-      
+
       // Verify both keys have range notation
-      const rangeNotationCount = (descriptorWithoutChecksum.match(/\/<0;1>\/\*/g) || []).length;
+      const rangeNotationCount = (
+        descriptorWithoutChecksum.match(/\/<0;1>\/\*/g) || []
+      ).length;
       expect(rangeNotationCount).toBe(2); // Should have range notation for both keys
     });
-    
+
     it("should generate valid checksum for range notation descriptor", async () => {
       const config: MultisigWalletConfig = {
         addressType: "P2WSH",
@@ -278,21 +277,23 @@ describe("Range Notation Support (<0;1>)", () => {
       };
 
       const result = await encodeDescriptorWithRangeNotation(config);
-      
+
       // Extract the checksum from the result
       const parts = result.split("#");
       expect(parts).toHaveLength(2);
       const generatedChecksum = parts[1];
-      
+
       // The checksum should be 8 characters long
       expect(generatedChecksum).toHaveLength(8);
-      
+
       // The checksum should only contain valid bech32 characters
-      expect(generatedChecksum).toMatch(/^[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
-      
+      expect(generatedChecksum).toMatch(
+        /^[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/,
+      );
+
       // Verify we can decode the descriptor (validates checksum is correct)
       await expect(
-        getWalletFromDescriptor(result, Network.TESTNET)
+        getWalletFromDescriptor(result, Network.TESTNET),
       ).resolves.toBeDefined();
     });
   });
@@ -335,30 +336,30 @@ describe("Range Notation Support (<0;1>)", () => {
     });
   });
 
-  describe("Edge cases", () => {
-    it("should handle P2SH with range notation", async () => {
-      const p2shRangeDescriptor =
-        "sh(sortedmulti(2,[f57ec65d/45'/0'/100']xpub6CCHViYn5VzPfSR7baop9FtGcbm3UnqHwa54Z2eNvJnRFCJCdo9HtCYoLJKZCoATMLUowDDA1BMGfQGauY3fDYU3HyMzX4NDkoLYCSkLpbH/<0;1>/*,[efa5d916/45'/0'/100']xpub6Ca5CwTgRASgkXbXE5TeddTP9mPCbYHreCpmGt9dhz9y6femstHGCoFESHHKKRcm414xMKnuLjP9LDS7TwaJC9n5gxua6XB1rwPcC6hqDub/<0;1>/*))#test1234";
+  describe("Different script types with range notation", () => {
+    // Test vectors for different address/script types with range notation
+    // Format: [addressType, descriptor, network?]
+    const scriptTypeVectors: [string, string, Network | undefined][] = [
+      [
+        "P2SH",
+        "sh(sortedmulti(2,[f57ec65d/45'/0'/100']xpub6CCHViYn5VzPfSR7baop9FtGcbm3UnqHwa54Z2eNvJnRFCJCdo9HtCYoLJKZCoATMLUowDDA1BMGfQGauY3fDYU3HyMzX4NDkoLYCSkLpbH/<0;1>/*,[efa5d916/45'/0'/100']xpub6Ca5CwTgRASgkXbXE5TeddTP9mPCbYHreCpmGt9dhz9y6femstHGCoFESHHKKRcm414xMKnuLjP9LDS7TwaJC9n5gxua6XB1rwPcC6hqDub/<0;1>/*))#jcq4kjz4",
+        undefined,
+      ],
+      [
+        "P2SH-P2WSH",
+        "sh(wsh(sortedmulti(2,[f57ec65d/48'/0'/100'/1']xpub6EwJjKaiocGvo9f7XSGXGwzo1GLB1URxSZ5Ccp1wqdxNkhrSoqNQkC2CeMsU675urdmFJLHSX62xz56HGcnn6u21wRy6uipovmzaE65PfBp/<0;1>/*,[efa5d916/48'/0'/100'/1']xpub6DcqYQxnbefzEBJF6osEuT5yXoHVZu1YCCsS5YkATvqD2h7tdMBgdBrUXk26FrJwawDGX6fHKPvhhZxKc5b8dPAPb8uANDhsjAPMJqTFDjH/<0;1>/*)))#mkhtqmzj",
+        undefined,
+      ],
+      ["P2WSH", rangeDescriptor, Network.TESTNET],
+    ];
 
-      const config = await getWalletFromDescriptor(p2shRangeDescriptor);
-      expect(config.addressType).toEqual("P2SH");
-    });
-
-    it("should handle P2SH-P2WSH with range notation", async () => {
-      const p2shP2wshRangeDescriptor =
-        "sh(wsh(sortedmulti(2,[f57ec65d/48'/0'/100'/1']xpub6EwJjKaiocGvo9f7XSGXGwzo1GLB1URxSZ5Ccp1wqdxNkhrSoqNQkC2CeMsU675urdmFJLHSX62xz56HGcnn6u21wRy6uipovmzaE65PfBp/<0;1>/*,[efa5d916/48'/0'/100'/1']xpub6DcqYQxnbefzEBJF6osEuT5yXoHVZu1YCCsS5YkATvqD2h7tdMBgdBrUXk26FrJwawDGX6fHKPvhhZxKc5b8dPAPb8uANDhsjAPMJqTFDjH/<0;1>/*)))#test5678";
-
-      const config = await getWalletFromDescriptor(p2shP2wshRangeDescriptor);
-      expect(config.addressType).toEqual("P2SH-P2WSH");
-    });
-
-    it("should handle mixed notation (some keys with range, some without)", async () => {
-      // This tests backward compatibility
-      const mixedDescriptor =
-        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/<0;1>/*))#test9999";
-
-      const config = await getWalletFromDescriptor(mixedDescriptor);
-      expect(config.keyOrigins.length).toEqual(2);
-    });
+    it.each(scriptTypeVectors)(
+      "should decode %s descriptor with range notation",
+      async (expectedAddressType, descriptor, network) => {
+        const config = await getWalletFromDescriptor(descriptor, network);
+        expect(config.addressType).toEqual(expectedAddressType);
+        expect(config.keyOrigins.length).toEqual(2);
+      },
+    );
   });
 });
