@@ -31,7 +31,7 @@ export const parseDescriptorPaths = (
     const match = /<\s*([0-9]+)\s*;\s*([0-9]+)\s*>\s*\/\*/.exec(
       descriptorWithoutChecksum,
     );
-    
+
     if (!match) {
       throw new Error("Invalid range notation format in descriptor");
     }
@@ -54,7 +54,7 @@ export const parseDescriptorPaths = (
     external = descriptor.replace(/1\/\*/g, "0/*").replace(checksumRegex, "");
   } else {
     throw new Error(
-      "Descriptor must contain either range notation (<0;1>/*) or path notation (0/* or 1/*)"
+      "Descriptor must contain either range notation (<0;1>/*) or path notation (0/* or 1/*)",
     );
   }
 
@@ -65,22 +65,28 @@ export const parseDescriptorPaths = (
  * Converts traditional separate descriptors to range notation format.
  * Takes external and internal descriptors and combines them into a single
  * descriptor using <0;1> notation with proper checksum.
- * 
+ *
  * Note: This function assumes external and internal descriptors are generated
  * from the same wallet config and only differ in /0/* vs /1/* paths.
- * 
+ * The internalDesc parameter is kept for API consistency and potential
+ * future validation use.
+ *
  * @param externalDesc - External descriptor (with /0/* paths)
- * @param internalDesc - Internal descriptor (with /1/* paths, currently unused) 
+ * @param _internalDesc - Internal descriptor (with /1/* paths, reserved for future validation)
  * @returns Single descriptor string with range notation that covers both external and internal paths
  */
 export const applyRangeNotation = (
   externalDesc: string,
-  internalDesc: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _internalDesc: string,
 ): string => {
   // Replace all /0/* with /<0;1>/* in the external descriptor
   const externalWithoutChecksum = externalDesc.split("#")[0];
-  const rangeDescriptor = externalWithoutChecksum.replace(/\/0\/\*/g, "/<0;1>/*");
-  
+  const rangeDescriptor = externalWithoutChecksum.replace(
+    /\/0\/\*/g,
+    "/<0;1>/*",
+  );
+
   // Calculate checksum for the range notation descriptor
   const checksum = calculateDescriptorChecksum(rangeDescriptor);
   return `${rangeDescriptor}#${checksum}`;
