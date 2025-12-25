@@ -2,4 +2,4 @@
 "@caravan/descriptors": minor
 ---
 
-Add new non-standard descriptor support with <0,1>
+Add BIP389 multipath descriptor support with <0;1> notation

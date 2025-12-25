@@ -3,7 +3,7 @@ import {
   MultisigWalletConfig,
   decodeDescriptors,
   encodeDescriptors,
-  encodeDescriptorWithRangeNotation,
+  encodeDescriptorWithMultipath,
   getChecksum,
   getWalletFromDescriptor,
 } from "./descriptors";
@@ -175,13 +175,13 @@ describe("getChecksum", () => {
   });
 });
 
-// New tests for <0;1> range notation support
-describe("Range Notation Support (<0;1>)", () => {
-  // Descriptor with <0;1> range notation - combines external and internal into one descriptor
-  const rangeDescriptor =
+// New tests for <0;1> multipath notation support
+describe("Multipath Notation Support (<0;1>)", () => {
+  // Descriptor with <0;1> multipath notation - combines external and internal into one descriptor
+  const multipathDescriptor =
     "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/<0;1>/*))#pjv8pr5k";
 
-  const expectedRangeKeys = [
+  const expectedMultipathKeys = [
     {
       xfp: "d52d08fc",
       bip32Path: "m/48h/1h/0h/2h",
@@ -194,21 +194,21 @@ describe("Range Notation Support (<0;1>)", () => {
     },
   ];
 
-  describe("getWalletFromDescriptor with range notation", () => {
-    // Test vectors for range notation descriptors
+  describe("getWalletFromDescriptor with multipath notation", () => {
+    // Test vectors for multipath notation descriptors
     // Format: [description, descriptor]
-    const rangeNotationVariants: [string, string][] = [
+    const multipathNotationVariants: [string, string][] = [
       [
         "standard <0;1> notation",
         "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/<0;1>/*))#pjv8pr5k",
       ],
       [
-        "spaces around range values < 0 ; 1 >",
+        "spaces around multipath values < 0 ; 1 >",
         "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubDEmdqnW7FVtXFej7WqNH6Wt92LKECvi2C326HHziBbfq8XCqS1qVoWYMpzPZcAMoD5n4YBDDdkRSToZsP3fgJSzMkLexZ6M3Vsuw7aXdZtz/< 0 ; 1 >/*,[85b4d568/48h/1h/0h/2h]tpubDFg79ktERPWQb7L8BFJFhCWq3hrZfGKz393LmB9eXgAg9TLh1GgPSa6XD5TyWrKkSUkijwajoMHQc4yRNwUqsoyC7sW4tb1EutYBfEm1boX/< 0 ; 1 >/*))#pjv8pr5k",
       ],
     ];
 
-    it.each(rangeNotationVariants)(
+    it.each(multipathNotationVariants)(
       "should decode descriptor with %s",
       async (_, descriptor) => {
         const config = await getWalletFromDescriptor(
@@ -222,26 +222,30 @@ describe("Range Notation Support (<0;1>)", () => {
         expect(config.keyOrigins.length).toEqual(2);
 
         // Verify first key origin
-        expect(config.keyOrigins[0].xfp).toEqual(expectedRangeKeys[0].xfp);
-        expect(config.keyOrigins[0].xpub).toEqual(expectedRangeKeys[0].xpub);
+        expect(config.keyOrigins[0].xfp).toEqual(expectedMultipathKeys[0].xfp);
+        expect(config.keyOrigins[0].xpub).toEqual(
+          expectedMultipathKeys[0].xpub,
+        );
 
         // Verify second key origin
-        expect(config.keyOrigins[1].xfp).toEqual(expectedRangeKeys[1].xfp);
-        expect(config.keyOrigins[1].xpub).toEqual(expectedRangeKeys[1].xpub);
+        expect(config.keyOrigins[1].xfp).toEqual(expectedMultipathKeys[1].xfp);
+        expect(config.keyOrigins[1].xpub).toEqual(
+          expectedMultipathKeys[1].xpub,
+        );
       },
     );
   });
 
-  describe("encodeDescriptorWithRangeNotation", () => {
-    it("should encode config to a single range notation descriptor", async () => {
+  describe("encodeDescriptorWithMultipath", () => {
+    it("should encode config to a single multipath notation descriptor", async () => {
       const config: MultisigWalletConfig = {
         addressType: "P2WSH",
         network: Network.TESTNET,
         requiredSigners: 2,
-        keyOrigins: expectedRangeKeys,
+        keyOrigins: expectedMultipathKeys,
       };
 
-      const result = await encodeDescriptorWithRangeNotation(config);
+      const result = await encodeDescriptorWithMultipath(config);
 
       // Should be a single string, not an object
       expect(typeof result).toBe("string");
@@ -255,17 +259,17 @@ describe("Range Notation Support (<0;1>)", () => {
       // Extract descriptor without checksum
       const descriptorWithoutChecksum = result.split("#")[0];
 
-      // Verify the descriptor contains both keys with range notation
+      // Verify the descriptor contains both keys with multipath notation
       // Note: BDK may use either ' or h for hardened derivation
       expect(descriptorWithoutChecksum).toContain("/<0;1>/*");
       expect(descriptorWithoutChecksum).toContain("[d52d08fc/48");
       expect(descriptorWithoutChecksum).toContain("[85b4d568/48");
 
-      // Verify both keys have range notation
-      const rangeNotationCount = (
+      // Verify both keys have multipath notation
+      const multipathNotationCount = (
         descriptorWithoutChecksum.match(/\/<0;1>\/\*/g) || []
       ).length;
-      expect(rangeNotationCount).toBe(2); // Should have range notation for both keys
+      expect(multipathNotationCount).toBe(2); // Should have multipath notation for both keys
     });
 
     it("should generate valid checksum for range notation descriptor", async () => {
@@ -273,10 +277,10 @@ describe("Range Notation Support (<0;1>)", () => {
         addressType: "P2WSH",
         network: Network.TESTNET,
         requiredSigners: 2,
-        keyOrigins: expectedRangeKeys,
+        keyOrigins: expectedMultipathKeys,
       };
 
-      const result = await encodeDescriptorWithRangeNotation(config);
+      const result = await encodeDescriptorWithMultipath(config);
 
       // Extract the checksum from the result
       const parts = result.split("#");
@@ -298,15 +302,15 @@ describe("Range Notation Support (<0;1>)", () => {
     });
   });
 
-  describe("Round-trip with range notation", () => {
-    it("should successfully round-trip encode and decode with range notation", async () => {
-      // Start with range descriptor
+  describe("Round-trip with multipath notation", () => {
+    it("should successfully round-trip encode and decode with multipath notation", async () => {
+      // Start with multipath descriptor
       const decoded = await getWalletFromDescriptor(
-        rangeDescriptor,
+        multipathDescriptor,
         Network.TESTNET,
       );
 
-      // Encode it back (should use range notation if flag is set)
+      // Encode it back (should use multipath notation if flag is set)
       const encoded = await encodeDescriptors(decoded);
 
       // Decode again
@@ -329,15 +333,15 @@ describe("Range Notation Support (<0;1>)", () => {
     });
   });
 
-  describe("getChecksum with range notation", () => {
-    it("should extract checksum from range notation descriptor", async () => {
-      const checksum = await getChecksum(rangeDescriptor);
+  describe("getChecksum with multipath notation", () => {
+    it("should extract checksum from multipath notation descriptor", async () => {
+      const checksum = await getChecksum(multipathDescriptor);
       expect(checksum).toEqual("pjv8pr5k");
     });
   });
 
-  describe("Different script types with range notation", () => {
-    // Test vectors for different address/script types with range notation
+  describe("Different script types with multipath notation", () => {
+    // Test vectors for different address/script types with multipath notation
     // Format: [addressType, descriptor, network?]
     const scriptTypeVectors: [string, string, Network | undefined][] = [
       [
@@ -350,11 +354,11 @@ describe("Range Notation Support (<0;1>)", () => {
         "sh(wsh(sortedmulti(2,[f57ec65d/48'/0'/100'/1']xpub6EwJjKaiocGvo9f7XSGXGwzo1GLB1URxSZ5Ccp1wqdxNkhrSoqNQkC2CeMsU675urdmFJLHSX62xz56HGcnn6u21wRy6uipovmzaE65PfBp/<0;1>/*,[efa5d916/48'/0'/100'/1']xpub6DcqYQxnbefzEBJF6osEuT5yXoHVZu1YCCsS5YkATvqD2h7tdMBgdBrUXk26FrJwawDGX6fHKPvhhZxKc5b8dPAPb8uANDhsjAPMJqTFDjH/<0;1>/*)))#mkhtqmzj",
         undefined,
       ],
-      ["P2WSH", rangeDescriptor, Network.TESTNET],
+      ["P2WSH", multipathDescriptor, Network.TESTNET],
     ];
 
     it.each(scriptTypeVectors)(
-      "should decode %s descriptor with range notation",
+      "should decode %s descriptor with multipath notation",
       async (expectedAddressType, descriptor, network) => {
         const config = await getWalletFromDescriptor(descriptor, network);
         expect(config.addressType).toEqual(expectedAddressType);

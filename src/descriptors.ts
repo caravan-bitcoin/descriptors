@@ -5,7 +5,10 @@ import {
   validateExtendedPublicKeyForNetwork,
 } from "@caravan/bitcoin";
 import { KeyOrigin } from "@caravan/wallets";
-import { applyRangeNotation, parseDescriptorPaths } from "./utils/rangeNotation";
+import {
+  applyMultipathNotation,
+  parseDescriptorPaths,
+} from "./utils/multipath";
 
 // should be a 32 byte hex string
 export type PolicyHmac = string;
@@ -85,7 +88,7 @@ export const encodeDescriptors = async (
   return { receive: externalDesc, change: internalDesc };
 };
 
-export const encodeDescriptorWithRangeNotation = async (
+export const encodeDescriptorWithMultipath = async (
   config: MultisigWalletConfig,
 ): Promise<string> => {
   const bdk = await getRustAPI();
@@ -95,38 +98,15 @@ export const encodeDescriptorWithRangeNotation = async (
   const externalDesc = wallet.external_descriptor().to_string();
   const internalDesc = wallet.internal_descriptor().to_string();
 
-  // Convert to range notation and return single descriptor
-  const rangeDescriptor = applyRangeNotation(externalDesc, internalDesc);
-  return rangeDescriptor;
+  // Convert to multipath notation and return single descriptor
+  const multipathDescriptor = applyMultipathNotation(
+    externalDesc,
+    internalDesc,
+  );
+  return multipathDescriptor;
 };
 
 const checksumRegex = /#[0-9a-zA-Z]{8}/g;
-
-/**
- * Decode a range-notation descriptor into a MultisigWalletConfig.
- * 
- * This function accepts a single descriptor string that uses range notation
- * (e.g., <0;1>/*) and extracts the wallet configuration from it.
- * 
- * @param descriptor - A descriptor string with range notation
- * @param network - Optional network specification (mainnet, testnet, etc.)
- * @returns MultisigWalletConfig extracted from the descriptor
- * 
- * @example
- * ```typescript
- * const config = await decodeRangeNotationDescriptor(
- *   "wsh(sortedmulti(2,.../<0;1>/*))#checksum",
- *   Network.TESTNET
- * );
- * ```
- */
-export const decodeRangeNotationDescriptor = async (
-  descriptor: string,
-  network?: Network,
-): Promise<MultisigWalletConfig> => {
-  const { external, internal } = parseDescriptorPaths(descriptor);
-  return await decodeDescriptors(internal, external, network);
-};
 
 export const getChecksum = async (descriptor: string) => {
   // let's just check that the descriptor is valid
@@ -155,9 +135,8 @@ export const getWalletFromDescriptor = async (
   return await decodeDescriptors(internal, external, network);
 };
 
-export default { 
-  encodeDescriptors, 
-  encodeDescriptorWithRangeNotation,
+export default {
+  encodeDescriptors,
+  encodeDescriptorWithMultipath,
   decodeDescriptors,
-  decodeRangeNotationDescriptor,
 };

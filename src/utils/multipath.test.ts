@@ -1,4 +1,4 @@
-import { parseDescriptorPaths, applyRangeNotation } from "./rangeNotation";
+import { parseDescriptorPaths, applyMultipathNotation } from "./multipath";
 
 describe("parseDescriptorPaths", () => {
   describe("multipath notation parsing", () => {
@@ -136,14 +136,14 @@ describe("parseDescriptorPaths", () => {
   });
 });
 
-describe("applyRangeNotation", () => {
+describe("applyMultipathNotation", () => {
   it("should convert /0/* to /<0;1>/* and add checksum", () => {
     const externalDesc =
       "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/0/*,[85b4d568/48h]tpubYYY/0/*))#oldcheck";
     const internalDesc =
       "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/1/*,[85b4d568/48h]tpubYYY/1/*))#oldcheck";
 
-    const result = applyRangeNotation(externalDesc, internalDesc);
+    const result = applyMultipathNotation(externalDesc, internalDesc);
 
     expect(result).toContain("/<0;1>/*");
     expect(result).not.toContain("/0/*");
@@ -156,9 +156,9 @@ describe("applyRangeNotation", () => {
     const internalDesc =
       "wsh(sortedmulti(2,[aaa]tpubA/1/*,[bbb]tpubB/1/*,[ccc]tpubC/1/*))#check";
 
-    const result = applyRangeNotation(externalDesc, internalDesc);
+    const result = applyMultipathNotation(externalDesc, internalDesc);
 
-    // Should have 3 instances of range notation
+    // Should have 3 instances of multipath notation
     const matches = result.match(/\/<0;1>\/\*/g);
     expect(matches).toHaveLength(3);
   });

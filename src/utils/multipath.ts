@@ -90,7 +90,7 @@ export const parseDescriptorPaths = (
 };
 
 /**
- * Converts traditional separate descriptors to range notation format.
+ * Converts traditional separate descriptors to multipath notation format.
  * Takes external and internal descriptors and combines them into a single
  * descriptor using <0;1> notation with proper checksum.
  *
@@ -101,21 +101,21 @@ export const parseDescriptorPaths = (
  *
  * @param externalDesc - External descriptor (with /0/* paths)
  * @param _internalDesc - Internal descriptor (with /1/* paths, reserved for future validation)
- * @returns Single descriptor string with range notation that covers both external and internal paths
+ * @returns Single descriptor string with multipath notation that covers both external and internal paths
  */
-export const applyRangeNotation = (
+export const applyMultipathNotation = (
   externalDesc: string,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _internalDesc: string,
 ): string => {
   // Replace all /0/* with /<0;1>/* in the external descriptor
   const externalWithoutChecksum = externalDesc.split("#")[0];
-  const rangeDescriptor = externalWithoutChecksum.replace(
+  const multipathDescriptor = externalWithoutChecksum.replace(
     /\/0\/\*/g,
     "/<0;1>/*",
   );
 
-  // Calculate checksum for the range notation descriptor
-  const checksum = calculateDescriptorChecksum(rangeDescriptor);
-  return `${rangeDescriptor}#${checksum}`;
+  // Calculate checksum for the multipath descriptor
+  const checksum = calculateDescriptorChecksum(multipathDescriptor);
+  return `${multipathDescriptor}#${checksum}`;
 };
