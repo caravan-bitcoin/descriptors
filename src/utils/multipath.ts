@@ -13,12 +13,15 @@ const NUMERIC_PART_REGEX = /^([0-9]+)([hH']?)$/;
 export const CHECKSUM_REGEX = /#[0-9a-zA-Z]{8}/g;
 
 /**
- * Validates a descriptor according to BIP389 constraints.
+ * Validates a descriptor according to BIP389 constraints for `<0;1>/*` tuples.
  * Throws errors for invalid multipath descriptors.
  *
- * BIP389 constraints:
+ * **Note:** This implementation validates BIP389 constraints but only supports
+ * `<0;1>/*` tuples. Arbitrary tuples like `<1;2;3>/*` are not supported.
+ *
+ * BIP389 constraints validated:
  * - Only one multipath specifier allowed per Key Expression
- * - Multipath specifiers must have matching tuple lengths across all Key Expressions
+ * - Multipath specifiers must have matching tuple lengths (all `<0;1>` tuples)
  * - No duplicate values within a multipath tuple
  * - Multipath specifier cannot appear in origin [xfp/path]
  *
@@ -121,11 +124,28 @@ function validateMultipathDescriptor(descriptor: string): void {
  * Handles three cases:
  * 1. Multipath notation (e.g., <0;1>/*, <0h;1h>/*) - expands to separate 0/* and 1/* descriptors
  *    Supports hardened derivation indicators: h, H, or ' (e.g., <0h;1h>/*, <0';1'>/*)
+ *    **Note:** Only `<0;1>/*` tuples are supported (not arbitrary tuples)
  * 2. External notation (0/*) - generates corresponding internal descriptor (1/*)
  * 3. Internal notation (1/*) - generates corresponding external descriptor (0/*)
  *
+ * @example
+ * ```typescript
+ * // Multipath descriptor (BIP389 subset - <0;1>/* only)
+ * const multipath = "wsh(sortedmulti(2,[...]/<0;1>/*,...))#checksum";
+ * const { external, internal } = parseDescriptorPaths(multipath);
+ * // external: "wsh(sortedmulti(2,[...]/0/*,...))"
+ * // internal: "wsh(sortedmulti(2,[...]/1/*,...))"
+ *
+ * // Traditional external descriptor
+ * const externalDesc = "wsh(sortedmulti(2,[...]/0/*,...))#checksum";
+ * const { external, internal } = parseDescriptorPaths(externalDesc);
+ * // external: "wsh(sortedmulti(2,[...]/0/*,...))#checksum"
+ * // internal: "wsh(sortedmulti(2,[...]/1/*,...))"
+ * ```
+ *
  * @param descriptor - The descriptor string in any of the supported formats
  * @returns Object with external and internal descriptor strings (without checksums)
+ * @throws Error if descriptor doesn't contain valid path notation
  */
 export const parseDescriptorPaths = (
   descriptor: string,
@@ -207,8 +227,25 @@ export const parseDescriptorPaths = (
  * Validates that the descriptor contains either /0/* or /1/* paths, then converts
  * them to <0;1>/* multipath notation with proper checksum.
  *
+ * **Note:** This function only supports `<0;1>/*` tuples, which covers the primary
+ * wallet use case. BIP389 allows arbitrary tuples, but only `<0;1>` is supported.
+ *
+ * @example
+ * ```typescript
+ * // External descriptor
+ * const externalDesc = "wsh(sortedmulti(2,[...]/0/*,[...]/0/*))#oldcheck";
+ * const multipathDesc = expandToMultipathWalletDescriptor(externalDesc);
+ * // Returns: "wsh(sortedmulti(2,[...]/<0;1>/*,[...]/<0;1>/*))#newchecksum"
+ *
+ * // Internal descriptor
+ * const internalDesc = "wsh(sortedmulti(2,[...]/1/*,[...]/1/*))#oldcheck";
+ * const multipathDesc2 = expandToMultipathWalletDescriptor(internalDesc);
+ * // Returns: "wsh(sortedmulti(2,[...]/<0;1>/*,[...]/<0;1>/*))#newchecksum"
+ * ```
+ *
  * @param descriptor - Descriptor with /0/* paths (external) or /1/* paths (internal)
- * @returns Single descriptor string with multipath notation that covers both external and internal paths
+ * @returns Single descriptor string with multipath notation (`<0;1>/*`) that covers both external and internal paths
+ * @throws Error if descriptor doesn't contain /0/* or /1/* paths
  */
 export const expandToMultipathWalletDescriptor = (
   descriptor: string,

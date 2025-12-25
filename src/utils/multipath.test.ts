@@ -5,7 +5,9 @@ import {
 
 describe("parseDescriptorPaths", () => {
   describe("multipath notation parsing", () => {
-    // BIP389 test vectors from https://bips.dev/389/
+    // Test cases following BIP389 format (https://bips.dev/389/)
+    // Note: These are not official BIP389 test vectors, but test cases that validate
+    // BIP389-compliant multipath notation for <0;1>/* tuples
     const multipathTestVectors: Array<
       [
         description: string,
@@ -15,13 +17,13 @@ describe("parseDescriptorPaths", () => {
       ]
     > = [
       [
-        "BIP389: pk with <0;1>/* (wallet format)",
+        "pk with <0;1>/* (wallet format)",
         "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;1>/*)",
         "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0/*)",
         "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/1/*)",
       ],
       [
-        "BIP389: pkh with <2147483647h;0>/0",
+        "pkh with hardened path <2147483647h;0>/0",
         "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/<2147483647h;0>/0)",
         "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/2147483647h/*)",
         "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/0/*)",
