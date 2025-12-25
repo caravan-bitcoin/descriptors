@@ -1,28 +1,84 @@
 import { parseDescriptorPaths, applyRangeNotation } from "./rangeNotation";
 
 describe("parseDescriptorPaths", () => {
-  describe("range notation parsing", () => {
-    it("should parse <0;1> range notation into external and internal", () => {
-      const descriptor =
-        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0;1>/*))#checksum";
+  describe("multipath notation parsing", () => {
+    // BIP389 test vectors from https://bips.dev/389/
+    const multipathTestVectors: Array<
+      [
+        description: string,
+        descriptor: string,
+        expectedExternal: string,
+        expectedInternal: string,
+      ]
+    > = [
+      [
+        "BIP389: pk with <0;1>/* (wallet format)",
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;1>/*)",
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/0/*)",
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/1/*)",
+      ],
+      [
+        "BIP389: pkh with <2147483647h;0>/0",
+        "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/<2147483647h;0>/0)",
+        "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/2147483647h/*)",
+        "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/0/*)",
+      ],
+      [
+        "multipath with <0;1>/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0;1>/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1/*))",
+      ],
+      [
+        "multipath with spaces < 0 ; 1 >/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/< 0 ; 1 >/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1/*))",
+      ],
+      [
+        "multipath with hardened h <0h;1h>/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0h;1h>/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0h/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1h/*))",
+      ],
+      [
+        "multipath with hardened apostrophe <0';1'>/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0';1'>/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0'/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1'/*))",
+      ],
+      [
+        "multipath with hardened uppercase H <0H;1H>/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0H;1H>/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0H/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1H/*))",
+      ],
+      [
+        "multipath mixed hardened/unhardened <0;1h>/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0;1h>/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1h/*))",
+      ],
+      [
+        "multipath first hardened <0h;1>/*",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0h;1>/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/0h/*))",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1/*))",
+      ],
+    ];
 
-      const { external, internal } = parseDescriptorPaths(descriptor);
+    it.each(multipathTestVectors)(
+      "should parse %s",
+      (_, descriptor, expectedExternal, expectedInternal) => {
+        const { external, internal } = parseDescriptorPaths(descriptor);
 
-      expect(external).toContain("/0/*");
-      expect(external).not.toContain("<0;1>");
-      expect(internal).toContain("/1/*");
-      expect(internal).not.toContain("<0;1>");
-    });
-
-    it("should parse <0;1> with spaces", () => {
-      const descriptor =
-        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/< 0 ; 1 >/*))#checksum";
-
-      const { external, internal } = parseDescriptorPaths(descriptor);
-
-      expect(external).toContain("/0/*");
-      expect(internal).toContain("/1/*");
-    });
+        expect(external).toBe(expectedExternal);
+        expect(internal).toBe(expectedInternal);
+        // Verify multipath notation is removed
+        expect(external).not.toMatch(/<[^>]+>/);
+        expect(internal).not.toMatch(/<[^>]+>/);
+      },
+    );
   });
 
   describe("traditional notation parsing", () => {
@@ -50,23 +106,29 @@ describe("parseDescriptorPaths", () => {
   });
 
   describe("error cases", () => {
-    it("should throw for descriptor without path notation", () => {
-      const invalidDescriptor =
-        "wsh(sortedmulti(2,[d52d08fc]tpubXXX))#checksum";
+    const errorTestVectors: Array<
+      [description: string, descriptor: string, expectedError: string]
+    > = [
+      [
+        "descriptor without path notation",
+        "wsh(sortedmulti(2,[d52d08fc]tpubXXX))#checksum",
+        "Descriptor must contain either multipath notation (<0;1>/* or <0;1>/NUM) or path notation (0/* or 1/*)",
+      ],
+      [
+        "descriptor with only wildcard (no path index)",
+        "wsh(sortedmulti(2,[d52d08fc]tpubXXX/*))#checksum",
+        "Descriptor must contain either multipath notation (<0;1>/* or <0;1>/NUM) or path notation (0/* or 1/*)",
+      ],
+    ];
 
-      expect(() => parseDescriptorPaths(invalidDescriptor)).toThrow(
-        "Descriptor must contain either range notation (<0;1>/*) or path notation (0/* or 1/*)",
-      );
-    });
-
-    it("should throw for descriptor with only wildcard (no path index)", () => {
-      const invalidDescriptor =
-        "wsh(sortedmulti(2,[d52d08fc]tpubXXX/*))#checksum";
-
-      expect(() => parseDescriptorPaths(invalidDescriptor)).toThrow(
-        "Descriptor must contain either range notation (<0;1>/*) or path notation (0/* or 1/*)",
-      );
-    });
+    it.each(errorTestVectors)(
+      "should throw for %s",
+      (_, invalidDescriptor, expectedError) => {
+        expect(() => parseDescriptorPaths(invalidDescriptor)).toThrow(
+          expectedError,
+        );
+      },
+    );
 
     it("should throw for empty descriptor", () => {
       expect(() => parseDescriptorPaths("")).toThrow();

@@ -3,7 +3,8 @@ import { calculateDescriptorChecksum } from "./checksum";
 /**
  * Splits a descriptor into separate external and internal descriptors.
  * Handles three cases:
- * 1. Range notation (e.g., <0;1>/*) - expands to separate 0/* and 1/* descriptors
+ * 1. Multipath notation (e.g., <0;1>/*, <0h;1h>/*) - expands to separate 0/* and 1/* descriptors
+ *    Supports hardened derivation indicators: h, H, or ' (e.g., <0h;1h>/*, <0';1'>/*)
  * 2. External notation (0/*) - generates corresponding internal descriptor (1/*)
  * 3. Internal notation (1/*) - generates corresponding external descriptor (0/*)
  *
@@ -17,33 +18,60 @@ export const parseDescriptorPaths = (
   let internal = "";
   let external = "";
 
-  // Check for range notation like <0;1>/* or < 0 ; 1 >/*
-  // The range is followed by /* so we need to match the whole pattern
-  const rangeRegex = /<\s*([0-9]+)\s*;\s*([0-9]+)\s*>\s*\/\*/g;
-  const rangeMatch = descriptor.match(rangeRegex);
+  // Check for multipath notation like <0;1>/* or < 0 ; 1 >/* or <0h;1h>/* or <2147483647h;0>/0
+  // Supports hardened derivation indicators: h, H, or '
+  // The multipath can be followed by /* or /NUM (we convert /NUM to /* for wallet use)
+  // Match pattern: <NUM;NUM> followed by /* or /NUM
+  const multipathRegex =
+    /<\s*([0-9]+[hH']?)\s*;\s*([0-9]+[hH']?)\s*>\s*\/(?:\*|[0-9]+)/g;
+  const multipathMatch = descriptor.match(multipathRegex);
 
-  if (rangeMatch) {
-    // Range notation detected (e.g., <0;1>/*)
+  if (multipathMatch) {
+    // Multipath notation detected (e.g., <0;1>/*, <0h;1h>/*, <0';1'>/*, <2147483647h;0>/0)
     // Remove checksum before expansion
     const descriptorWithoutChecksum = descriptor.replace(checksumRegex, "");
 
-    // Extract the range values - we need to match again to get capture groups
-    const match = /<\s*([0-9]+)\s*;\s*([0-9]+)\s*>\s*\/\*/.exec(
-      descriptorWithoutChecksum,
-    );
+    // Extract the multipath values - we need to match again to get capture groups
+    // This regex captures the full value including hardened indicators
+    // Captures: <NUM;NUM> followed by /* or /NUM
+    const match =
+      /<\s*([0-9]+[hH']?)\s*;\s*([0-9]+[hH']?)\s*>\s*\/(?:\*|[0-9]+)/.exec(
+        descriptorWithoutChecksum,
+      );
 
     if (!match) {
-      throw new Error("Invalid range notation format in descriptor");
+      throw new Error("Invalid multipath notation format in descriptor");
     }
 
     // match[0] is the full match, match[1] and match[2] are the capture groups
-    const [, a, b] = match;
+    // These include hardened indicators if present (e.g., "0h", "1'", "2147483647h")
+    const [, firstValue, secondValue] = match;
 
-    // Replace <0;1>/* with 0/* for external
-    external = descriptorWithoutChecksum.replace(rangeRegex, `${a}/*`);
+    // Extract the numeric part and hardened indicator separately for proper expansion
+    // First value goes to external, second to internal
+    const firstMatch = /^([0-9]+)([hH']?)$/.exec(firstValue);
+    const secondMatch = /^([0-9]+)([hH']?)$/.exec(secondValue);
 
-    // Replace <0;1>/* with 1/* for internal
-    internal = descriptorWithoutChecksum.replace(rangeRegex, `${b}/*`);
+    if (!firstMatch || !secondMatch) {
+      throw new Error("Invalid multipath notation format in descriptor");
+    }
+
+    const [, firstNum, firstHardened] = firstMatch;
+    const [, secondNum, secondHardened] = secondMatch;
+
+    // Replace multipath notation with first value for external (preserving hardened indicator)
+    // Convert any /NUM after multipath to /* for wallet descriptor use
+    external = descriptorWithoutChecksum.replace(
+      multipathRegex,
+      `${firstNum}${firstHardened}/*`,
+    );
+
+    // Replace multipath notation with second value for internal (preserving hardened indicator)
+    // Convert any /NUM after multipath to /* for wallet descriptor use
+    internal = descriptorWithoutChecksum.replace(
+      multipathRegex,
+      `${secondNum}${secondHardened}/*`,
+    );
   } else if (descriptor.includes("0/*")) {
     // Traditional notation with 0/*
     external = descriptor;
@@ -54,7 +82,7 @@ export const parseDescriptorPaths = (
     external = descriptor.replace(/1\/\*/g, "0/*").replace(checksumRegex, "");
   } else {
     throw new Error(
-      "Descriptor must contain either range notation (<0;1>/*) or path notation (0/* or 1/*)",
+      "Descriptor must contain either multipath notation (<0;1>/* or <0;1>/NUM) or path notation (0/* or 1/*)",
     );
   }
 
