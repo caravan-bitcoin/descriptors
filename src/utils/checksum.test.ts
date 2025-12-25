@@ -30,4 +30,18 @@ describe("calculateDescriptorChecksum", () => {
     const checksum = calculateDescriptorChecksum(descriptor);
     expect(checksum).toBe("pjv8pr5k");
   });
+
+  describe("BIP389 test vectors", () => {
+    it("should calculate checksum for BIP389 hardened path test vector", () => {
+      // BIP389 test vector: pkh(xprv.../<2147483647h;0>/0)
+      // Note: We use /* instead of /0 for wallet format
+      const descriptor =
+        "pkh(xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U/<2147483647h;0>/*)";
+
+      const checksum = calculateDescriptorChecksum(descriptor);
+      // Verify checksum is valid (8 characters, bech32 charset)
+      expect(checksum).toHaveLength(8);
+      expect(checksum).toMatch(/^[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
+    });
+  });
 });

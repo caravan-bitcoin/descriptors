@@ -1,4 +1,7 @@
-import { parseDescriptorPaths, applyMultipathNotation } from "./multipath";
+import {
+  parseDescriptorPaths,
+  expandToMultipathWalletDescriptor,
+} from "./multipath";
 
 describe("parseDescriptorPaths", () => {
   describe("multipath notation parsing", () => {
@@ -186,30 +189,65 @@ describe("BIP389 Validation", () => {
   });
 });
 
-describe("applyMultipathNotation", () => {
-  it("should convert /0/* to /<0;1>/* and add checksum", () => {
-    const externalDesc =
-      "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/0/*,[85b4d568/48h]tpubYYY/0/*))#oldcheck";
-    const internalDesc =
-      "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/1/*,[85b4d568/48h]tpubYYY/1/*))#oldcheck";
+describe("expandToMultipathWalletDescriptor", () => {
+  describe("with single descriptor", () => {
+    const validSingleDescriptorVectors: Array<
+      [description: string, descriptor: string, shouldNotContain: string]
+    > = [
+      [
+        "convert single descriptor with /0/* paths to multipath",
+        "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/0/*,[85b4d568/48h]tpubYYY/0/*))#oldcheck",
+        "/0/*",
+      ],
+      [
+        "convert single descriptor with /1/* paths to multipath",
+        "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/1/*,[85b4d568/48h]tpubYYY/1/*))#oldcheck",
+        "/1/*",
+      ],
+    ];
 
-    const result = applyMultipathNotation(externalDesc, internalDesc);
+    it.each(validSingleDescriptorVectors)(
+      "should %s",
+      (_, descriptor, shouldNotContain) => {
+        const result = expandToMultipathWalletDescriptor(descriptor);
 
-    expect(result).toContain("/<0;1>/*");
-    expect(result).not.toContain("/0/*");
-    expect(result).toMatch(/#[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
+        expect(result).toContain("/<0;1>/*");
+        expect(result).not.toContain(shouldNotContain);
+        expect(result).toMatch(/#[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
+      },
+    );
+
+    it("should throw if single descriptor has no /0/* or /1/* paths", () => {
+      const descriptor =
+        "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/*,[85b4d568/48h]tpubYYY/*))#oldcheck";
+
+      expect(() => expandToMultipathWalletDescriptor(descriptor)).toThrow(
+        "Descriptor must contain /0/* or /1/* paths to expand to multipath notation",
+      );
+    });
+
+    it("should handle multiple keys with /0/* paths", () => {
+      const descriptor =
+        "wsh(sortedmulti(2,[aaa]tpubA/0/*,[bbb]tpubB/0/*,[ccc]tpubC/0/*))#check";
+
+      const result = expandToMultipathWalletDescriptor(descriptor);
+
+      const matches = result.match(/\/<0;1>\/\*/g);
+      expect(matches).toHaveLength(3);
+      expect(result).toContain("/<0;1>/*");
+      expect(result).not.toContain("/0/*");
+      expect(result).toMatch(/#[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
+    });
   });
 
-  it("should handle multiple keys with /0/* paths", () => {
-    const externalDesc =
-      "wsh(sortedmulti(2,[aaa]tpubA/0/*,[bbb]tpubB/0/*,[ccc]tpubC/0/*))#check";
-    const internalDesc =
-      "wsh(sortedmulti(2,[aaa]tpubA/1/*,[bbb]tpubB/1/*,[ccc]tpubC/1/*))#check";
+  describe("BIP389 validation", () => {
+    it("should validate multipath descriptor after conversion", () => {
+      const descriptor =
+        "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/0/*,[85b4d568/48h]tpubYYY/0/*))#oldcheck";
 
-    const result = applyMultipathNotation(externalDesc, internalDesc);
-
-    // Should have 3 instances of multipath notation
-    const matches = result.match(/\/<0;1>\/\*/g);
-    expect(matches).toHaveLength(3);
+      const result = expandToMultipathWalletDescriptor(descriptor);
+      expect(result).toContain("/<0;1>/*");
+      expect(result).toMatch(/#[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
+    });
   });
 });

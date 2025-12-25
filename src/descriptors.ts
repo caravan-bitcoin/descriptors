@@ -6,7 +6,7 @@ import {
 } from "@caravan/bitcoin";
 import { KeyOrigin } from "@caravan/wallets";
 import {
-  applyMultipathNotation,
+  expandToMultipathWalletDescriptor,
   parseDescriptorPaths,
   CHECKSUM_REGEX,
 } from "./utils/multipath";
@@ -97,13 +97,9 @@ export const encodeDescriptorWithMultipath = async (
   const wallet = RsWalletConfig.from_str(JSON.stringify(config));
 
   const externalDesc = wallet.external_descriptor().to_string();
-  const internalDesc = wallet.internal_descriptor().to_string();
 
   // Convert to multipath notation and return single descriptor
-  const multipathDescriptor = applyMultipathNotation(
-    externalDesc,
-    internalDesc,
-  );
+  const multipathDescriptor = expandToMultipathWalletDescriptor(externalDesc);
   return multipathDescriptor;
 };
 

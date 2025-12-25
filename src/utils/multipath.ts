@@ -54,13 +54,11 @@ function validateMultipathDescriptor(descriptor: string): void {
   }
 
   // 3. Extract tuple values and validate
-  const tuples: Array<[string, string]> = [];
   for (const match of multipathMatches) {
     const firstValue = match[1] as string;
     const secondValue = match[2] as string;
 
     // Extract numeric parts (without hardened indicators) for duplicate check
-    // Use NUMERIC_PART_REGEX and extract just the numeric part (group 1)
     const firstMatch = NUMERIC_PART_REGEX.exec(firstValue);
     const secondMatch = NUMERIC_PART_REGEX.exec(secondValue);
 
@@ -75,26 +73,11 @@ function validateMultipathDescriptor(descriptor: string): void {
     if (firstNum === secondNum) {
       throw new Error("Duplicate values not allowed in multipath tuple");
     }
-
-    tuples.push([firstValue, secondValue]);
   }
 
-  // 4. Validate matching tuple lengths (all should be length 2 for <NUM;NUM>)
-  // Since we only support 2-value tuples, all tuples should have exactly 2 values
-  const tupleLength = 2;
-  for (const tuple of tuples) {
-    if (tuple.length !== tupleLength) {
-      throw new Error(
-        "All multipath specifiers must have matching tuple lengths",
-      );
-    }
-  }
-
-  // 5. Validate single specifier per key expression
-  // For multisig descriptors, keys are separated by commas at the top level
-  // We need to ensure each key expression has at most one multipath specifier
-  // Strategy: Check if any two multipath specifiers appear in the same key expression
-  // (i.e., no comma between them at the top level)
+  // 4. Validate single specifier per key expression
+  // Check if any two multipath specifiers appear in the same key expression
+  // (i.e., no top-level comma between them)
 
   for (let i = 0; i < multipathMatches.length; i++) {
     for (let j = i + 1; j < multipathMatches.length; j++) {
@@ -164,9 +147,7 @@ export const parseDescriptorPaths = (
     // Validate multipath descriptor according to BIP389 constraints
     validateMultipathDescriptor(descriptorWithoutChecksum);
 
-    // Extract the multipath values - we need to match again to get capture groups
-    // This regex captures the full value including hardened indicators
-    // Captures: <NUM;NUM> followed by /* or /NUM
+    // Extract the multipath values - match again to get capture groups
     const matchRegex = new RegExp(MULTIPATH_REGEX.source);
     const match = matchRegex.exec(descriptorWithoutChecksum);
 
@@ -174,8 +155,7 @@ export const parseDescriptorPaths = (
       throw new Error("Invalid multipath notation format in descriptor");
     }
 
-    // match[0] is the full match, match[1] and match[2] are the capture groups
-    // These include hardened indicators if present (e.g., "0h", "1'", "2147483647h")
+    // match[1] and match[2] are the capture groups (e.g., "0h", "1'", "2147483647h")
     const [, firstValue, secondValue] = match;
 
     // Extract the numeric part and hardened indicator separately for proper expansion
@@ -191,7 +171,6 @@ export const parseDescriptorPaths = (
     const [, secondNum, secondHardened] = secondMatch;
 
     // Replace multipath notation with first value for external (preserving hardened indicator)
-    // Convert any /NUM after multipath to /* for wallet descriptor use
     const replaceRegex = new RegExp(
       MULTIPATH_REGEX.source,
       MULTIPATH_REGEX.flags,
@@ -202,7 +181,6 @@ export const parseDescriptorPaths = (
     );
 
     // Replace multipath notation with second value for internal (preserving hardened indicator)
-    // Convert any /NUM after multipath to /* for wallet descriptor use
     internal = descriptorWithoutChecksum.replace(
       replaceRegex,
       `${secondNum}${secondHardened}/*`,
@@ -225,30 +203,30 @@ export const parseDescriptorPaths = (
 };
 
 /**
- * Converts traditional separate descriptors to multipath notation format.
- * Takes external and internal descriptors and combines them into a single
- * descriptor using <0;1> notation with proper checksum.
+ * Expands a descriptor with /0/* or /1/* paths to multipath wallet descriptor format.
+ * Validates that the descriptor contains either /0/* or /1/* paths, then converts
+ * them to <0;1>/* multipath notation with proper checksum.
  *
- * Note: This function assumes external and internal descriptors are generated
- * from the same wallet config and only differ in /0/* vs /1/* paths.
- * The internalDesc parameter is kept for API consistency and potential
- * future validation use.
- *
- * @param externalDesc - External descriptor (with /0/* paths)
- * @param _internalDesc - Internal descriptor (with /1/* paths, reserved for future validation)
+ * @param descriptor - Descriptor with /0/* paths (external) or /1/* paths (internal)
  * @returns Single descriptor string with multipath notation that covers both external and internal paths
  */
-export const applyMultipathNotation = (
-  externalDesc: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _internalDesc: string,
+export const expandToMultipathWalletDescriptor = (
+  descriptor: string,
 ): string => {
-  // Replace all /0/* with /<0;1>/* in the external descriptor
-  const externalWithoutChecksum = externalDesc.split("#")[0];
-  const multipathDescriptor = externalWithoutChecksum.replace(
-    /\/0\/\*/g,
-    "/<0;1>/*",
-  );
+  const descriptorWithoutChecksum = descriptor.split("#")[0];
+  const isExternal = descriptorWithoutChecksum.includes("0/*");
+  const isInternal = descriptorWithoutChecksum.includes("1/*");
+
+  if (!isExternal && !isInternal) {
+    throw new Error(
+      "Descriptor must contain /0/* or /1/* paths to expand to multipath notation",
+    );
+  }
+
+  // Replace /0/* or /1/* with /<0;1>/*
+  const multipathDescriptor = descriptorWithoutChecksum
+    .replace(/\/0\/\*/g, "/<0;1>/*")
+    .replace(/\/1\/\*/g, "/<0;1>/*");
 
   // Validate multipath descriptor according to BIP389 constraints
   validateMultipathDescriptor(multipathDescriptor);
