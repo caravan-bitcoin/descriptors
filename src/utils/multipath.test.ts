@@ -136,6 +136,56 @@ describe("parseDescriptorPaths", () => {
   });
 });
 
+describe("BIP389 Validation", () => {
+  // Import the validation function (it's not exported, so we test via parseDescriptorPaths)
+  describe("validateMultipathDescriptor (via parseDescriptorPaths)", () => {
+    const invalidMultipathVectors: Array<
+      [description: string, descriptor: string, expectedError: string]
+    > = [
+      [
+        "multipath in origin [xfp/path]",
+        "pkh([deadbeef/<0;1>]xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/<0;1>/*)",
+        "Multipath specifier cannot appear in origin",
+      ],
+      [
+        "duplicate values in tuple <0;0>",
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;0>/*)",
+        "Duplicate values not allowed in multipath tuple",
+      ],
+      [
+        "multiple multipath specifiers in one key",
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;1>/*/<2;3>/*)",
+        "Only one multipath specifier allowed per Key Expression",
+      ],
+      [
+        "duplicate values in tuple <1;1>",
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<1;1>/*)",
+        "Duplicate values not allowed in multipath tuple",
+      ],
+    ];
+
+    it.each(invalidMultipathVectors)(
+      "should throw for %s",
+      (_, invalidDescriptor, expectedError) => {
+        expect(() => parseDescriptorPaths(invalidDescriptor)).toThrow(
+          expectedError,
+        );
+      },
+    );
+
+    it("should accept valid multipath descriptors", () => {
+      const validDescriptors = [
+        "pk(xpub68NZiKmJWnxxS6aaHmn81bvJeTESw724CRDs6HbuccFQN9Ku14VQrADWgqbhhTHBaohPX4CjNLf9fq9MYo6oDaPPLPxSb7gwQN3ih19Zm4Y/<0;1>/*)",
+        "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubYYY/<0;1>/*))",
+      ];
+
+      for (const descriptor of validDescriptors) {
+        expect(() => parseDescriptorPaths(descriptor)).not.toThrow();
+      }
+    });
+  });
+});
+
 describe("applyMultipathNotation", () => {
   it("should convert /0/* to /<0;1>/* and add checksum", () => {
     const externalDesc =

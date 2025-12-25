@@ -8,6 +8,7 @@ import { KeyOrigin } from "@caravan/wallets";
 import {
   applyMultipathNotation,
   parseDescriptorPaths,
+  CHECKSUM_REGEX,
 } from "./utils/multipath";
 
 // should be a 32 byte hex string
@@ -106,8 +107,6 @@ export const encodeDescriptorWithMultipath = async (
   return multipathDescriptor;
 };
 
-const checksumRegex = /#[0-9a-zA-Z]{8}/g;
-
 export const getChecksum = async (descriptor: string) => {
   // let's just check that the descriptor is valid
   try {
@@ -119,7 +118,7 @@ export const getChecksum = async (descriptor: string) => {
       throw e;
     }
   }
-  const checksum = descriptor.match(checksumRegex);
+  const checksum = descriptor.match(CHECKSUM_REGEX);
   const pieces = descriptor.split("#");
   if (!checksum || pieces.length !== 2) {
     throw new Error("Could not find valid checksum");
