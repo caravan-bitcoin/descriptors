@@ -5,7 +5,7 @@ import {
   encodeDescriptors,
   encodeDescriptorWithMultipath,
   getChecksum,
-  getWalletConfigFromDescriptor,
+  getWalletFromDescriptor,
 } from "./descriptors";
 import {
   EXTERNAL_BRAID,
@@ -136,19 +136,19 @@ describe("encodeDescriptors", () => {
   });
 });
 
-describe("getWalletConfigFromDescriptor", () => {
+describe("getWalletFromDescriptor", () => {
   it("should convert a receive descriptor to a wallet", async () => {
-    const config = await getWalletConfigFromDescriptor(external);
+    const config = await getWalletFromDescriptor(external);
     testConfig(config);
   });
   it("should convert a change descriptor to a wallet", async () => {
-    const config = await getWalletConfigFromDescriptor(internal);
+    const config = await getWalletFromDescriptor(internal);
     testConfig(config);
   });
   it("should fail if passed with inconsistent network", async () => {
     let passed = false;
     try {
-      await getWalletConfigFromDescriptor(internal, Network.TESTNET);
+      await getWalletFromDescriptor(internal, Network.TESTNET);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       if (e instanceof Error) {
@@ -160,7 +160,7 @@ describe("getWalletConfigFromDescriptor", () => {
   });
 
   it("should convert a multipath descriptor to a wallet", async () => {
-    const config = await getWalletConfigFromDescriptor(MULTIPATH.descriptor);
+    const config = await getWalletFromDescriptor(MULTIPATH.descriptor);
     testConfig(config, TEST_MULTISIG_CONFIG);
   });
 });
@@ -217,13 +217,10 @@ describe("getChecksum", () => {
 
 // New tests for <0;1> multipath notation support
 describe("Multipath Notation Support (<0;1>)", () => {
-  describe("getWalletConfigFromDescriptor with multipath notation", () => {
+  describe("getWalletFromDescriptor with multipath notation", () => {
     it("should decode descriptor with standard <0;1> notation", async () => {
       const descriptor = `${MULTIPATH.descriptor}#${MULTIPATH.checksum}`;
-      const config = await getWalletConfigFromDescriptor(
-        descriptor,
-        Network.TESTNET,
-      );
+      const config = await getWalletFromDescriptor(descriptor, Network.TESTNET);
 
       testConfig(config, TEST_MULTISIG_CONFIG);
     });
@@ -281,7 +278,7 @@ describe("Multipath Notation Support (<0;1>)", () => {
 
       // Verify we can decode the descriptor (validates checksum is correct)
       await expect(
-        getWalletConfigFromDescriptor(result, Network.TESTNET),
+        getWalletFromDescriptor(result, Network.TESTNET),
       ).resolves.toBeDefined();
     });
   });
@@ -290,7 +287,7 @@ describe("Multipath Notation Support (<0;1>)", () => {
     it("should successfully round-trip encode and decode with multipath notation", async () => {
       // Start with multipath descriptor from fixture
       const multipathDescriptorWithChecksum = `${MULTIPATH.descriptor}#${MULTIPATH.checksum}`;
-      const decoded = await getWalletConfigFromDescriptor(
+      const decoded = await getWalletFromDescriptor(
         multipathDescriptorWithChecksum,
         Network.TESTNET,
       );
@@ -299,7 +296,7 @@ describe("Multipath Notation Support (<0;1>)", () => {
       const encoded = await encodeDescriptors(decoded);
 
       // Decode again
-      const reDecoded = await getWalletConfigFromDescriptor(
+      const reDecoded = await getWalletFromDescriptor(
         encoded.receive,
         Network.TESTNET,
       );
@@ -321,10 +318,7 @@ describe("Multipath Notation Support (<0;1>)", () => {
   describe("Different script types with multipath notation", () => {
     it("should decode P2WSH descriptor with multipath notation", async () => {
       const descriptor = `${MULTIPATH.descriptor}#${MULTIPATH.checksum}`;
-      const config = await getWalletConfigFromDescriptor(
-        descriptor,
-        Network.TESTNET,
-      );
+      const config = await getWalletFromDescriptor(descriptor, Network.TESTNET);
       expect(config.addressType).toEqual("P2WSH");
       expect(config.keyOrigins.length).toEqual(MULTIPATH.keys.length);
     });

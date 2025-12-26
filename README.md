@@ -126,7 +126,7 @@ const config = await decodeDescriptors(internal, external);
 // Returns: { requiredSigners, addressType, keyOrigins, network }
 ```
 
-### getWalletConfigFromDescriptor
+### getWalletFromDescriptor
 
 Takes a single descriptor (multipath or traditional) and converts it
 into a multisig wallet config. Supports BIP389 multipath notation
@@ -135,15 +135,15 @@ into a multisig wallet config. Supports BIP389 multipath notation
 **Note:** Only `<0;1>/*` multipath tuples are supported (not arbitrary tuples).
 
 ```typescript
-import { getWalletConfigFromDescriptor } from "@caravan/descriptors";
+import { getWalletFromDescriptor } from "@caravan/descriptors";
 
 // Multipath descriptor (<0;1>/* only)
 const multipathDesc = "wsh(sortedmulti(2,[...]/<0;1>/*,...))#checksum";
-const config = await getWalletConfigFromDescriptor(multipathDesc);
+const config = await getWalletFromDescriptor(multipathDesc);
 
 // Traditional descriptor
 const traditionalDesc = "wsh(sortedmulti(2,[...]/0/*,...))#checksum";
-const config2 = await getWalletConfigFromDescriptor(traditionalDesc);
+const config2 = await getWalletFromDescriptor(traditionalDesc);
 ```
 
 ## BIP389 Multipath Descriptor Support
@@ -171,8 +171,8 @@ const multipathDescriptor =
   "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubYYY/<0;1>/*))#checksum";
 
 // Parse into separate external and internal descriptors
-import { getWalletConfigFromDescriptor } from "@caravan/descriptors";
-const config = await getWalletConfigFromDescriptor(multipathDescriptor);
+import { getWalletFromDescriptor } from "@caravan/descriptors";
+const config = await getWalletFromDescriptor(multipathDescriptor);
 ```
 
 ### Example: Creating Multipath Descriptor
