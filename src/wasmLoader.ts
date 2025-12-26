@@ -12,6 +12,9 @@ let Network: WasmWebModule["Network"] | WasmNodeModule["Network"];
 let MultisigWalletConfig:
   | WasmWebModule["MultisigWalletConfig"]
   | WasmNodeModule["MultisigWalletConfig"];
+let calc_descriptor_checksum:
+  | WasmWebModule["calc_descriptor_checksum"]
+  | WasmNodeModule["calc_descriptor_checksum"];
 
 async function initWasm() {
   if (typeof window !== "undefined") {
@@ -23,6 +26,7 @@ async function initWasm() {
       CaravanConfig,
       Network,
       MultisigWalletConfig,
+      calc_descriptor_checksum,
     } = module);
     // need to tell the js where the wasm module is to init with
     // this ends up getting called from built js code from wasm-pack build
@@ -31,8 +35,13 @@ async function initWasm() {
   } else {
     // Node.js environment
     const module = await import("../caravan-rs/pkg-nodejs/caravan_rs");
-    ({ ExtendedDescriptor, CaravanConfig, Network, MultisigWalletConfig } =
-      module);
+    ({
+      ExtendedDescriptor,
+      CaravanConfig,
+      Network,
+      MultisigWalletConfig,
+      calc_descriptor_checksum,
+    } = module);
   }
 }
 
@@ -42,5 +51,11 @@ export async function getRustAPI() {
     await initWasm();
   }
 
-  return { ExtendedDescriptor, CaravanConfig, Network, MultisigWalletConfig };
+  return {
+    ExtendedDescriptor,
+    CaravanConfig,
+    Network,
+    MultisigWalletConfig,
+    calc_descriptor_checksum,
+  };
 }

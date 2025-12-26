@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 default = ["console_error_panic_hook"]
 
 [dependencies]
-wasm-bindgen = "0.2.88"
+wasm-bindgen = "0.2.106"
 serde = { version = "^1.0", features = ["derive"] }
 serde_json = { version = "^1.0" }
 
@@ -28,7 +28,7 @@ bdk_chain = "0.5.0"
 bdk_esplora = { version = "0.3.0", default-features = false, features = ["async-https"] }
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.34"
+wasm-bindgen-test = "0.3.37"
 assert-json-diff = "2.0"
 
 [profile.release]

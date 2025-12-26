@@ -1,3 +1,5 @@
+import { getRustAPI } from "./wasmLoader";
+
 /**
  * Calculate descriptor checksum according to BIP 380
  * https://github.com/bitcoin/bips/blob/master/bip-0380.mediawiki
@@ -84,4 +86,22 @@ export const calculateDescriptorChecksum = (descriptor: string): string => {
 
   // Convert to checksum string - each element is already a 5-bit value
   return c.map((v) => CHECKSUM_CHARSET[v]).join("");
+};
+
+/**
+ * Calculate descriptor checksum using BDK's Rust implementation via WASM.
+ * This function uses BDK's checksum calculation which follows BIP-380.
+ *
+ * @param descriptor - The descriptor string (with or without existing checksum)
+ * @returns Promise resolving to the 8-character checksum string
+ * @throws Error if BDK checksum calculation is not available or fails
+ */
+export const calculateChecksum = async (
+  descriptor: string,
+): Promise<string> => {
+  const bdk = await getRustAPI();
+  if (!bdk.calc_descriptor_checksum) {
+    throw new Error("BDK checksum calculation not available");
+  }
+  return bdk.calc_descriptor_checksum(descriptor);
 };

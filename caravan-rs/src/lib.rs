@@ -3,6 +3,7 @@ pub mod utils;
 
 use bdk::bitcoin::Network as BdkNetwork;
 use bdk::descriptor::ExtendedDescriptor as BdkExtendedDescriptor;
+use bdk::descriptor::checksum;
 use bdk::KeychainKind::{External, Internal};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
@@ -170,4 +171,21 @@ impl CaravanConfig {
     pub fn network(&self) -> Network {
         Network(self.0.network())
     }
+}
+
+/// Calculate the checksum for a descriptor string.
+///
+/// This function uses BDK's checksum calculation which follows BIP-380.
+/// The descriptor string should not include a checksum (it will be ignored if present).
+///
+/// # Arguments
+/// * `descriptor` - The descriptor string (with or without existing checksum)
+///
+/// # Returns
+/// The 8-character checksum string
+#[wasm_bindgen]
+pub fn calc_descriptor_checksum(descriptor: &str) -> Result<String, JsError> {
+    let checksum = checksum::calc_checksum(descriptor)
+        .map_err(|e| JsError::new(&format!("Failed to calculate checksum: {}", e)))?;
+    Ok(checksum)
 }
