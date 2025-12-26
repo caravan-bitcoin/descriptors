@@ -2,7 +2,7 @@ import {
   parseDescriptorPaths,
   expandToMultipathWalletDescriptor,
 } from "./multipath";
-import { calculateDescriptorChecksum } from "./checksum";
+import { calculateChecksum } from "./checksum";
 import { EXTERNAL_BRAID, INTERNAL_BRAID, MULTIPATH } from "./fixtures";
 
 describe("parseDescriptorPaths", () => {
@@ -74,7 +74,7 @@ describe("parseDescriptorPaths", () => {
       ],
     ];
 
-    it("should parse complex multipath descriptor with multiple keys and hardened paths", () => {
+    it("should parse complex multipath descriptor with multiple keys and hardened paths", async () => {
       // Tests generated with Sparrow wallet
       const multipathDescriptor = `${MULTIPATH.descriptor}#${MULTIPATH.checksum}`;
 
@@ -97,8 +97,8 @@ describe("parseDescriptorPaths", () => {
       expect(internal).not.toContain("/0/*");
 
       // Verify checksums can be calculated
-      const externalChecksum = calculateDescriptorChecksum(external);
-      const internalChecksum = calculateDescriptorChecksum(internal);
+      const externalChecksum = await calculateChecksum(external);
+      const internalChecksum = await calculateChecksum(internal);
       expect(externalChecksum).toHaveLength(8);
       expect(internalChecksum).toHaveLength(8);
       expect(externalChecksum).toMatch(
@@ -247,8 +247,8 @@ describe("expandToMultipathWalletDescriptor", () => {
 
     it.each(validSingleDescriptorVectors)(
       "should %s",
-      (_, descriptor, shouldNotContain) => {
-        const result = expandToMultipathWalletDescriptor(descriptor);
+      async (_, descriptor, shouldNotContain) => {
+        const result = await expandToMultipathWalletDescriptor(descriptor);
 
         expect(result).toContain("/<0;1>/*");
         expect(result).not.toContain(shouldNotContain);
@@ -256,20 +256,22 @@ describe("expandToMultipathWalletDescriptor", () => {
       },
     );
 
-    it("should throw if single descriptor has no /0/* or /1/* paths", () => {
+    it("should throw if single descriptor has no /0/* or /1/* paths", async () => {
       const descriptor =
         "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/*,[85b4d568/48h]tpubYYY/*))#oldcheck";
 
-      expect(() => expandToMultipathWalletDescriptor(descriptor)).toThrow(
+      await expect(
+        expandToMultipathWalletDescriptor(descriptor),
+      ).rejects.toThrow(
         "Descriptor must contain /0/* or /1/* paths to expand to multipath notation",
       );
     });
 
-    it("should handle multiple keys with /0/* paths", () => {
+    it("should handle multiple keys with /0/* paths", async () => {
       const descriptor =
         "wsh(sortedmulti(2,[aaa]tpubA/0/*,[bbb]tpubB/0/*,[ccc]tpubC/0/*))#check";
 
-      const result = expandToMultipathWalletDescriptor(descriptor);
+      const result = await expandToMultipathWalletDescriptor(descriptor);
 
       const matches = result.match(/\/<0;1>\/\*/g);
       expect(matches).toHaveLength(3);
@@ -280,11 +282,11 @@ describe("expandToMultipathWalletDescriptor", () => {
   });
 
   describe("BIP389 validation", () => {
-    it("should validate multipath descriptor after conversion", () => {
+    it("should validate multipath descriptor after conversion", async () => {
       const descriptor =
         "wsh(sortedmulti(2,[d52d08fc/48h]tpubXXX/0/*,[85b4d568/48h]tpubYYY/0/*))#oldcheck";
 
-      const result = expandToMultipathWalletDescriptor(descriptor);
+      const result = await expandToMultipathWalletDescriptor(descriptor);
       expect(result).toContain("/<0;1>/*");
       expect(result).toMatch(/#[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/);
     });

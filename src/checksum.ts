@@ -6,6 +6,10 @@ import { getRustAPI } from "./wasmLoader";
  *
  * The checksum uses a BCH code for error detection.
  * Reference: Bitcoin Core src/script/descriptor.cpp
+ *
+ * NOTE: This function is not used or exported anywhere in the library, preferring to use
+ * the calculateChecksum function instead which is built from the Rust implementation via WASM.
+ * We will keep this here for reference. In the future we may use this as a fallback.
  */
 export const calculateDescriptorChecksum = (descriptor: string): string => {
   const CHECKSUM_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";

@@ -14,7 +14,8 @@ let MultisigWalletConfig:
   | WasmNodeModule["MultisigWalletConfig"];
 let calc_descriptor_checksum:
   | WasmWebModule["calc_descriptor_checksum"]
-  | WasmNodeModule["calc_descriptor_checksum"];
+  | WasmNodeModule["calc_descriptor_checksum"]
+  | undefined;
 
 async function initWasm() {
   if (typeof window !== "undefined") {

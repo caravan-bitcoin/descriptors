@@ -172,7 +172,8 @@ export const encodeDescriptorWithMultipath = async (
   const externalDesc = wallet.external_descriptor().to_string();
 
   // Convert to multipath notation and return single descriptor
-  const multipathDescriptor = expandToMultipathWalletDescriptor(externalDesc);
+  const multipathDescriptor =
+    await expandToMultipathWalletDescriptor(externalDesc);
   return multipathDescriptor;
 };
 

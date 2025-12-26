@@ -146,6 +146,24 @@ const traditionalDesc = "wsh(sortedmulti(2,[...]/0/*,...))#checksum";
 const config2 = await getWalletFromDescriptor(traditionalDesc);
 ```
 
+### calculateChecksum
+
+Calculates the BIP-380 checksum for a descriptor string using BDK's Rust implementation via WASM.
+The checksum is an 8-character string that validates the integrity of the descriptor.
+
+**Note:** The descriptor string can include or exclude an existing checksum (it will be ignored if present).
+
+```typescript
+import { calculateChecksum } from "@caravan/descriptors";
+
+const descriptor = "wsh(sortedmulti(2,[...]/<0;1>/*,...))";
+const checksum = await calculateChecksum(descriptor);
+// Returns: "8-character checksum string"
+
+// Use it to create a full descriptor with checksum
+const descriptorWithChecksum = `${descriptor}#${checksum}`;
+```
+
 ## BIP389 Multipath Descriptor Support
 
 This library supports [BIP389](https://bips.dev/389/) multipath descriptor notation

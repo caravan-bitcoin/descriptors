@@ -1,4 +1,4 @@
-import { calculateDescriptorChecksum } from "./checksum";
+import { calculateChecksum } from "./checksum";
 
 // Regex pattern for matching multipath notation: <NUM;NUM> followed by /* or /NUM
 // Supports hardened derivation indicators: h, H, or '
@@ -234,12 +234,12 @@ export const parseDescriptorPaths = (
  * ```typescript
  * // External descriptor
  * const externalDesc = "wsh(sortedmulti(2,[...]/0/*,[...]/0/*))#oldcheck";
- * const multipathDesc = expandToMultipathWalletDescriptor(externalDesc);
+ * const multipathDesc = await expandToMultipathWalletDescriptor(externalDesc);
  * // Returns: "wsh(sortedmulti(2,[...]/<0;1>/*,[...]/<0;1>/*))#newchecksum"
  *
  * // Internal descriptor
  * const internalDesc = "wsh(sortedmulti(2,[...]/1/*,[...]/1/*))#oldcheck";
- * const multipathDesc2 = expandToMultipathWalletDescriptor(internalDesc);
+ * const multipathDesc2 = await expandToMultipathWalletDescriptor(internalDesc);
  * // Returns: "wsh(sortedmulti(2,[...]/<0;1>/*,[...]/<0;1>/*))#newchecksum"
  * ```
  *
@@ -247,9 +247,9 @@ export const parseDescriptorPaths = (
  * @returns Single descriptor string with multipath notation (`<0;1>/*`) that covers both external and internal paths
  * @throws Error if descriptor doesn't contain /0/* or /1/* paths
  */
-export const expandToMultipathWalletDescriptor = (
+export const expandToMultipathWalletDescriptor = async (
   descriptor: string,
-): string => {
+): Promise<string> => {
   const descriptorWithoutChecksum = descriptor.split("#")[0];
   const isExternal = descriptorWithoutChecksum.includes("0/*");
   const isInternal = descriptorWithoutChecksum.includes("1/*");
@@ -268,7 +268,7 @@ export const expandToMultipathWalletDescriptor = (
   // Validate multipath descriptor according to BIP389 constraints
   validateMultipathDescriptor(multipathDescriptor);
 
-  // Calculate checksum for the multipath descriptor
-  const checksum = calculateDescriptorChecksum(multipathDescriptor);
+  // Calculate checksum for the multipath descriptor using BDK
+  const checksum = await calculateChecksum(multipathDescriptor);
   return `${multipathDescriptor}#${checksum}`;
 };
