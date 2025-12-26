@@ -9,7 +9,7 @@ import {
   expandToMultipathWalletDescriptor,
   parseDescriptorPaths,
   CHECKSUM_REGEX,
-} from "./utils/multipath";
+} from "./multipath";
 
 // should be a 32 byte hex string
 export type PolicyHmac = string;

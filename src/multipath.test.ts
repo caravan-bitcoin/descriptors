@@ -3,7 +3,7 @@ import {
   expandToMultipathWalletDescriptor,
 } from "./multipath";
 import { calculateDescriptorChecksum } from "./checksum";
-import { EXTERNAL_BRAID, INTERNAL_BRAID, MULTIPATH } from "../fixtures";
+import { EXTERNAL_BRAID, INTERNAL_BRAID, MULTIPATH } from "./fixtures";
 
 describe("parseDescriptorPaths", () => {
   describe("multipath notation parsing", () => {

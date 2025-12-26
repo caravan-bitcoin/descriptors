@@ -1,4 +1,4 @@
-import { EXTERNAL_BRAID, INTERNAL_BRAID, MULTIPATH } from "../fixtures";
+import { EXTERNAL_BRAID, INTERNAL_BRAID, MULTIPATH } from "./fixtures";
 import { calculateDescriptorChecksum } from "./checksum";
 
 describe("calculateDescriptorChecksum", () => {
