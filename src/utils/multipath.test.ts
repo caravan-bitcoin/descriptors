@@ -2,6 +2,8 @@ import {
   parseDescriptorPaths,
   expandToMultipathWalletDescriptor,
 } from "./multipath";
+import { calculateDescriptorChecksum } from "./checksum";
+import { EXTERNAL_BRAID, INTERNAL_BRAID, MULTIPATH } from "../fixtures";
 
 describe("parseDescriptorPaths", () => {
   describe("multipath notation parsing", () => {
@@ -71,6 +73,41 @@ describe("parseDescriptorPaths", () => {
         "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/1/*))",
       ],
     ];
+
+    it("should parse complex multipath descriptor with multiple keys and hardened paths", () => {
+      // Tests generated with Sparrow wallet
+      const multipathDescriptor = `${MULTIPATH.descriptor}#${MULTIPATH.checksum}`;
+
+      const { external, internal } = parseDescriptorPaths(multipathDescriptor);
+
+      // parseDescriptorPaths preserves key order and hardened indicators (h stays h)
+
+      // Verify path expansion (without checksums)
+      expect(external).toBe(EXTERNAL_BRAID.descriptor);
+      expect(internal).toBe(INTERNAL_BRAID.descriptor);
+
+      // Verify multipath notation is removed
+      expect(external).not.toMatch(/<[^>]+>/);
+      expect(internal).not.toMatch(/<[^>]+>/);
+
+      // Verify paths are correctly expanded
+      expect(external).toContain("/0/*");
+      expect(internal).toContain("/1/*");
+      expect(external).not.toContain("/1/*");
+      expect(internal).not.toContain("/0/*");
+
+      // Verify checksums can be calculated
+      const externalChecksum = calculateDescriptorChecksum(external);
+      const internalChecksum = calculateDescriptorChecksum(internal);
+      expect(externalChecksum).toHaveLength(8);
+      expect(internalChecksum).toHaveLength(8);
+      expect(externalChecksum).toMatch(
+        /^[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/,
+      );
+      expect(internalChecksum).toMatch(
+        /^[qpzry9x8gf2tvdw0s3jn54khce6mua7l]{8}$/,
+      );
+    });
 
     it.each(multipathTestVectors)(
       "should parse %s",
