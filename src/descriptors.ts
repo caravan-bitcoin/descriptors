@@ -179,7 +179,7 @@ export const encodeDescriptorWithMultipath = async (
 export const getChecksum = async (descriptor: string) => {
   // let's just check that the descriptor is valid
   try {
-    await getWalletFromDescriptor(descriptor);
+    await getWalletConfigFromDescriptor(descriptor);
   } catch (e) {
     if (e instanceof Error) {
       throw new Error(`Invalid descriptor: ${e.message}`);
@@ -203,21 +203,21 @@ export const getChecksum = async (descriptor: string) => {
  * ```typescript
  * // Multipath descriptor
  * const multipathDesc = "wsh(sortedmulti(2,[...]/<0;1>/*,...))#checksum";
- * const config = await getWalletFromDescriptor(multipathDesc);
+ * const config = await getWalletConfigFromDescriptor(multipathDesc);
  *
  * // Traditional external descriptor
  * const externalDesc = "wsh(sortedmulti(2,[...]/0/*,...))#checksum";
- * const config2 = await getWalletFromDescriptor(externalDesc);
+ * const config2 = await getWalletConfigFromDescriptor(externalDesc);
  *
  * // With network specified
- * const config3 = await getWalletFromDescriptor(multipathDesc, "testnet");
+ * const config3 = await getWalletConfigFromDescriptor(multipathDesc, "testnet");
  * ```
  *
  * @param descriptor - Descriptor string (multipath or traditional notation)
  * @param network - Optional network specification
  * @returns Promise resolving to multisig wallet configuration
  */
-export const getWalletFromDescriptor = async (
+export const getWalletConfigFromDescriptor = async (
   descriptor: string,
   network?: Network,
 ): Promise<MultisigWalletConfig> => {

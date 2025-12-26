@@ -68,8 +68,6 @@ $ npm run changeset
 
 ## API
 
-NOTE: This is subject to change as this is still very much alpha
-
 ### encodeDescriptors
 
 Takes a config for a multisig wallet and encodes it into
@@ -128,7 +126,7 @@ const config = await decodeDescriptors(internal, external);
 // Returns: { requiredSigners, addressType, keyOrigins, network }
 ```
 
-### getWalletFromDescriptor
+### getWalletConfigFromDescriptor
 
 Takes a single descriptor (multipath or traditional) and converts it
 into a multisig wallet config. Supports BIP389 multipath notation
@@ -137,15 +135,15 @@ into a multisig wallet config. Supports BIP389 multipath notation
 **Note:** Only `<0;1>/*` multipath tuples are supported (not arbitrary tuples).
 
 ```typescript
-import { getWalletFromDescriptor } from "@caravan/descriptors";
+import { getWalletConfigFromDescriptor } from "@caravan/descriptors";
 
 // Multipath descriptor (<0;1>/* only)
 const multipathDesc = "wsh(sortedmulti(2,[...]/<0;1>/*,...))#checksum";
-const config = await getWalletFromDescriptor(multipathDesc);
+const config = await getWalletConfigFromDescriptor(multipathDesc);
 
 // Traditional descriptor
 const traditionalDesc = "wsh(sortedmulti(2,[...]/0/*,...))#checksum";
-const config2 = await getWalletFromDescriptor(traditionalDesc);
+const config2 = await getWalletConfigFromDescriptor(traditionalDesc);
 ```
 
 ## BIP389 Multipath Descriptor Support
@@ -173,8 +171,8 @@ const multipathDescriptor =
   "wsh(sortedmulti(2,[d52d08fc/48h/1h/0h/2h]tpubXXX/<0;1>/*,[85b4d568/48h/1h/0h/2h]tpubYYY/<0;1>/*))#checksum";
 
 // Parse into separate external and internal descriptors
-import { getWalletFromDescriptor } from "@caravan/descriptors";
-const config = await getWalletFromDescriptor(multipathDescriptor);
+import { getWalletConfigFromDescriptor } from "@caravan/descriptors";
+const config = await getWalletConfigFromDescriptor(multipathDescriptor);
 ```
 
 ### Example: Creating Multipath Descriptor
@@ -203,13 +201,3 @@ const walletConfig = {
 // Creates: "wsh(sortedmulti(2,[...]/<0;1>/*,...))#checksum"
 const multipathDesc = await encodeDescriptorWithMultipath(walletConfig);
 ```
-
-### Supported Hardened Path Formats
-
-The library supports all BIP389 hardened path formats:
-
-- `<0h;1h>/*` - Lowercase 'h'
-- `<0H;1H>/*` - Uppercase 'H'
-- `<0';1'>/*` - Apostrophe
-- `<2147483647h;0>/*` - Large hardened values
-- `<0;1h>/*` - Mixed hardened/unhardened
