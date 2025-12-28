@@ -24,22 +24,23 @@ jobs:
         with:
           path: |
             ~/.npm
-            caravan-rs
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('caravan-rs') }}
+            caravan-rs/target
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('caravan-rs/Cargo.toml', 'caravan-rs/Cargo.lock', 'caravan-rs/src/**') }}
           restore-keys: ${{ runner.os }}-node-
 
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
           # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
-          version: 'latest'
+          version: "latest"
 
       - name: Install Dependencies
         run: npm install
 
       - name: Build
-        if: steps.cache.outputs.cache-hit != 'true'
         run: npm run build
+        # Always run build to generate pkg-web and pkg-nodejs directories
+        # Cache only speeds up Rust compilation by caching target/
 
       - name: Run tests
         run: npm run ci
