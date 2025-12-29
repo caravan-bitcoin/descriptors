@@ -35,38 +35,6 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           scope: "@caravan"
 
-      - name: Verify npm version and OIDC configuration
-        run: |
-          echo "Node.js version: $(node --version)"
-          echo "npm version: $(npm --version)"
-          npm_version=$(npm --version)
-          required_version="11.5.1"
-          if [ "$(printf '%s\n' "$required_version" "$npm_version" | sort -V | head -n1)" != "$required_version" ]; then
-            echo "⚠ npm version $npm_version is older than required $required_version"
-            echo "Installing npm 11.5.1+..."
-            npm install -g npm@latest
-            echo "New npm version: $(npm --version)"
-          else
-            echo "✓ npm version meets requirement ($npm_version >= $required_version)"
-          fi
-          echo ""
-          echo "Checking npm configuration..."
-          npm config get registry
-          npm config get //registry.npmjs.org/:_authToken || echo "No token auth configured (expected for OIDC)"
-          if [ -f ~/.npmrc ]; then
-            echo ".npmrc exists"
-            # Check if it contains OIDC-related config (but don't print sensitive data)
-            if grep -q "@actions/core" ~/.npmrc || grep -q "oidc" ~/.npmrc || grep -q "ACTIONS_ID_TOKEN_REQUEST_URL" ~/.npmrc; then
-              echo "✓ OIDC configuration detected in .npmrc"
-            else
-              echo "⚠ .npmrc exists but doesn't appear to have OIDC config"
-              echo "Contents (sanitized):"
-              sed 's/\(.*authToken.*\)/***REDACTED***/' ~/.npmrc || true
-            fi
-          else
-            echo "⚠ No .npmrc found - setup-node@v4 should create one for OIDC"
-          fi
-
       - name: Cache Dependencies ...
         uses: actions/cache@v4
         with:
