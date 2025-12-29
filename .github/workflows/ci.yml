@@ -27,10 +27,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.npm/_cacache
             caravan-rs/target
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('caravan-rs/Cargo.toml', 'caravan-rs/Cargo.lock', 'caravan-rs/src/**') }}
           restore-keys: ${{ runner.os }}-node-
+        # Cache only npm cache, not .npmrc (which setup-node creates for OIDC)
 
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
@@ -48,3 +49,15 @@ jobs:
 
       - name: Run tests
         run: npm run ci
+
+      - name: Setup Node.js 24 for OIDC test (PR only, same repo)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          scope: "@caravan"
+
+      - name: Test npm OIDC authentication (PR only, same repo)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        run: npm publish --dry-run

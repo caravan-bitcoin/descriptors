@@ -33,6 +33,7 @@ jobs:
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
+          scope: "@caravan"
 
       - name: Cache Dependencies ...
         uses: actions/cache@v4
@@ -52,26 +53,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
-
-      - name: Verify OIDC authentication is configured (temporary debugging step)
-        run: |
-          # Ensure no token-based auth is configured
-          npm config delete //registry.npmjs.org/:_authToken || true
-          npm config delete always-auth || true
-          # Verify registry is set (setup-node@v4 should have configured OIDC)
-          echo "Registry: $(npm config get registry)"
-          # Check if .npmrc exists and verify it doesn't contain token auth
-          if [ -f ~/.npmrc ]; then
-            if grep -q "_authToken" ~/.npmrc; then
-              echo "WARNING: .npmrc contains _authToken (token-based auth detected)"
-              echo "This should be removed for OIDC trusted publishing"
-            else
-              echo "✓ .npmrc exists and doesn't contain token auth (OIDC should be used)"
-            fi
-          else
-            echo "No ~/.npmrc found - setup-node@v4 should create one for OIDC"
-          fi
-          # TODO: Remove this step once OIDC authentication is confirmed working
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
