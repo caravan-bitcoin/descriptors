@@ -9,7 +9,6 @@ on:
     branches:
       - main
 
-
 # allow action to create tags and pull request
 permissions:
   contents: write
@@ -53,8 +52,8 @@ jobs:
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
-          version: 'latest'
+          # Pin to latest confirmed working version
+          version: "v0.12.1"
 
       - name: Install Dependencies
         run: npm install
@@ -68,4 +67,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
