@@ -27,10 +27,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.npm
+            ~/.npm/_cacache
             caravan-rs/target
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('caravan-rs/Cargo.toml', 'caravan-rs/Cargo.lock', 'caravan-rs/src/**') }}
           restore-keys: ${{ runner.os }}-node-
+        # Cache only npm cache, not .npmrc (which setup-node creates for OIDC)
 
       - name: Install wasm-pack
         uses: jetli/wasm-pack-action@v0.4.0
@@ -48,3 +49,28 @@ jobs:
 
       - name: Run tests
         run: npm run ci
+
+      - name: Setup Node.js 24 for OIDC test (PR only)
+        if: github.event_name == 'pull_request'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+          scope: "@caravan"
+
+      - name: Test npm OIDC authentication (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          # Verify npm version (needs 11.5.1+ for OIDC)
+          npm_version=$(npm --version)
+          required_version="11.5.1"
+          if [ "$(printf '%s\n' "$required_version" "$npm_version" | sort -V | head -n1)" != "$required_version" ]; then
+            echo "⚠ npm version $npm_version is older than required $required_version"
+            npm install -g npm@latest
+            echo "New npm version: $(npm --version)"
+          fi
+          # Ensure no token-based auth is configured
+          npm config delete //registry.npmjs.org/:_authToken || true
+          npm config delete always-auth || true
+          # Test authentication without actually publishing
+          npm publish --dry-run
